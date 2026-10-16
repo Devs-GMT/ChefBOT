@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "chefbot-recipes",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "vars": {
+    "CORS_ALLOWED_ORIGINS": "http://localhost:3000,http://127.0.0.1:3000",
+    "RATE_LIMIT_PER_HOUR": "20"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

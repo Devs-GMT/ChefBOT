@@ -1,0 +1,356 @@
+{
+  "version": 1,
+  "recipes": [
+    {
+      "title": "Garlic Egg Fried Rice",
+      "emoji": "🍳",
+      "minutes": 15,
+      "vegetarian": true,
+      "base": ["rice", "egg", "garlic", "spring onion", "soy sauce", "butter"],
+      "steps": [
+        "Cook the rice and spread it on a plate to cool for a few minutes.",
+        "Melt butter in a hot pan, add minced garlic, and fry for 30 seconds.",
+        "Push the garlic aside, scramble the egg, then toss in the rice.",
+        "Splash in soy sauce, keep tossing for 2 minutes, and finish with spring onion."
+      ]
+    },
+    {
+      "title": "Tomato & Cheese Omelette",
+      "emoji": "🍳",
+      "minutes": 10,
+      "vegetarian": true,
+      "base": ["egg", "tomato", "cheese", "butter", "chili"],
+      "steps": [
+        "Beat the eggs with a pinch of salt and chopped chili.",
+        "Melt butter in a small pan over medium heat and add diced tomato for 1 minute.",
+        "Pour in the eggs and let the base set without stirring.",
+        "Scatter cheese, fold the omelette, and slide it onto a plate."
+      ]
+    },
+    {
+      "title": "Peanut Butter Noodles",
+      "emoji": "🍜",
+      "minutes": 12,
+      "vegetarian": true,
+      "base": ["noodle", "peanut butter", "soy sauce", "garlic", "chili"],
+      "steps": [
+        "Boil the noodles until just tender, keeping a cup of the cooking water.",
+        "Stir peanut butter, soy sauce, minced garlic, and chili with a little hot water into a smooth sauce.",
+        "Toss the drained noodles through the sauce, loosening with cooking water.",
+        "Serve immediately, topping with extra chili if you like heat."
+      ]
+    },
+    {
+      "title": "Chicken Fried Rice",
+      "emoji": "🍗",
+      "minutes": 18,
+      "vegetarian": false,
+      "base": ["rice", "chicken breast", "egg", "garlic", "spring onion", "soy sauce"],
+      "steps": [
+        "Cut chicken into small pieces and season with a little soy sauce.",
+        "Stir-fry the chicken in a hot pan until golden, then set aside.",
+        "Scramble the egg in the same pan, add cold rice, and fry for 3 minutes.",
+        "Return the chicken, add garlic and spring onion, splash soy sauce, and toss to finish."
+      ]
+    },
+    {
+      "title": "Garlic Butter Shrimp",
+      "emoji": "🍤",
+      "minutes": 15,
+      "vegetarian": false,
+      "base": ["shrimp", "butter", "garlic", "lemon", "chili"],
+      "steps": [
+        "Pat the shrimp dry and season with salt.",
+        "Melt butter in a skillet, add garlic and chili, and fry until fragrant.",
+        "Add the shrimp and cook 2 minutes per side until pink.",
+        "Finish with a squeeze of lemon and spoon the pan butter over the top."
+      ]
+    },
+    {
+      "title": "Weeknight Beef Tacos",
+      "emoji": "🌮",
+      "minutes": 20,
+      "vegetarian": false,
+      "base": ["ground beef", "tortilla", "onion", "tomato", "cheese", "chili"],
+      "steps": [
+        "Brown the ground beef in a hot pan, breaking it up with a spoon.",
+        "Add onion, chili, and a pinch of salt; cook until softened.",
+        "Warm the tortillas in a dry pan for 30 seconds a side.",
+        "Fill with beef, top with tomato and cheese, and eat straight away."
+      ]
+    },
+    {
+      "title": "Black Bean Tacos",
+      "emoji": "🌮",
+      "minutes": 15,
+      "vegetarian": true,
+      "base": ["canned beans", "tortilla", "onion", "tomato", "cheese", "hot sauce"],
+      "steps": [
+        "Rinse the canned beans and warm them in a pan with a splash of water.",
+        "Mash roughly, add diced onion, and season well.",
+        "Warm the tortillas in a dry pan.",
+        "Fill with the beans, add tomato, cheese, and a hit of hot sauce."
+      ]
+    },
+    {
+      "title": "Coconut Vegetable Curry",
+      "emoji": "🍛",
+      "minutes": 25,
+      "vegetarian": true,
+      "base": ["coconut milk", "curry paste", "carrot", "bell pepper", "mushroom", "onion", "garlic"],
+      "steps": [
+        "Fry onion and garlic in a little oil until soft.",
+        "Add curry paste and stir for 30 seconds until it smells toasted.",
+        "Add carrot and bell pepper with a few spoons of coconut milk; simmer 10 minutes.",
+        "Add mushroom and the rest of the coconut milk; simmer 5 more minutes.",
+        "Taste, adjust salt, and serve hot."
+      ]
+    },
+    {
+      "title": "Quick Chicken Curry",
+      "emoji": "🍛",
+      "minutes": 30,
+      "vegetarian": false,
+      "base": ["chicken breast", "coconut milk", "curry paste", "onion", "garlic", "rice"],
+      "steps": [
+        "Start the rice so it finishes with the curry.",
+        "Fry onion and garlic until soft, then add curry paste for 30 seconds.",
+        "Add bite-size chicken pieces and stir to coat.",
+        "Pour in coconut milk and simmer 12–15 minutes until the chicken is cooked through.",
+        "Taste and serve over the rice."
+      ]
+    },
+    {
+      "title": "Tomato Garlic Pasta",
+      "emoji": "🍝",
+      "minutes": 20,
+      "vegetarian": true,
+      "base": ["pasta", "tomato", "garlic", "olive oil", "onion", "cheese"],
+      "steps": [
+        "Boil the pasta in well-salted water until al dente.",
+        "Meanwhile, gently fry onion and garlic in olive oil.",
+        "Add chopped tomato and simmer into a quick sauce, seasoning with salt.",
+        "Drain the pasta, toss through the sauce, and finish with grated cheese."
+      ]
+    },
+    {
+      "title": "Creamy Mushroom Pasta",
+      "emoji": "🍝",
+      "minutes": 22,
+      "vegetarian": true,
+      "base": ["pasta", "mushroom", "garlic", "butter", "cheese", "spinach"],
+      "steps": [
+        "Boil the pasta until al dente, reserving a mug of cooking water.",
+        "Fry mushrooms in butter until browned, then add garlic for 30 seconds.",
+        "Add spinach to wilt, then the pasta and a splash of cooking water.",
+        "Stir in cheese off the heat until glossy and serve."
+      ]
+    },
+    {
+      "title": "Grilled Cheese Toastie",
+      "emoji": "🥪",
+      "minutes": 10,
+      "vegetarian": true,
+      "base": ["bread", "butter", "cheese"],
+      "steps": [
+        "Butter one side of each slice of bread.",
+        "Layer cheese between the slices, buttered side out.",
+        "Cook in a pan over medium heat, pressing gently, 3 minutes a side.",
+        "Cut in half while the cheese is still stretchy."
+      ]
+    },
+    {
+      "title": "Bacon & Spinach Toastie",
+      "emoji": "🥪",
+      "minutes": 12,
+      "vegetarian": false,
+      "base": ["bread", "bacon", "spinach", "butter", "cheese"],
+      "steps": [
+        "Crisp the bacon in a dry pan, then drain on paper.",
+        "Wilt the spinach in the same pan for 30 seconds.",
+        "Build the toastie: bread, cheese, bacon, spinach, cheese, bread.",
+        "Butter the outside and grill 3 minutes a side until golden."
+      ]
+    },
+    {
+      "title": "Eggs in Tomato Sauce",
+      "emoji": "🍳",
+      "minutes": 20,
+      "vegetarian": true,
+      "base": ["egg", "tomato", "onion", "garlic", "bell pepper", "olive oil", "bread"],
+      "steps": [
+        "Soften onion, garlic, and bell pepper in olive oil.",
+        "Add chopped tomato and simmer 8 minutes into a thick sauce.",
+        "Make wells and crack in the eggs; cover and cook until the whites set.",
+        "Serve in the pan with bread for dipping."
+      ]
+    },
+    {
+      "title": "Crispy Potato Hash",
+      "emoji": "🥔",
+      "minutes": 25,
+      "vegetarian": true,
+      "base": ["potato", "onion", "bell pepper", "olive oil", "egg"],
+      "steps": [
+        "Dice the potato small so it cooks quickly; par-boil 5 minutes and drain.",
+        "Fry in olive oil undisturbed until golden on one side, then toss.",
+        "Add onion and bell pepper; cook until everything is tender.",
+        "Crack in an egg, cover, and cook until just set."
+      ]
+    },
+    {
+      "title": "Tofu Veggie Stir Fry",
+      "emoji": "🥡",
+      "minutes": 18,
+      "vegetarian": true,
+      "base": ["tofu", "broccoli", "carrot", "soy sauce", "garlic", "rice"],
+      "steps": [
+        "Press the tofu, cube it, and fry in oil until golden on all sides.",
+        "Remove the tofu; stir-fry broccoli and carrot for 3 minutes.",
+        "Add garlic, return the tofu, and splash in soy sauce.",
+        "Toss once more and serve over rice."
+      ]
+    },
+    {
+      "title": "Chicken Veggie Stir Fry",
+      "emoji": "🥡",
+      "minutes": 18,
+      "vegetarian": false,
+      "base": ["chicken breast", "broccoli", "carrot", "bell pepper", "soy sauce", "garlic", "rice"],
+      "steps": [
+        "Slice the chicken thinly and sear in a hot pan until golden.",
+        "Add carrot and broccoli; stir-fry 3 minutes.",
+        "Add bell pepper and garlic; cook 1 more minute.",
+        "Return any juices, add soy sauce, and serve straight over rice."
+      ]
+    },
+    {
+      "title": "Lemon Butter Salmon",
+      "emoji": "🐟",
+      "minutes": 25,
+      "vegetarian": false,
+      "base": ["salmon", "lemon", "butter", "spinach", "rice"],
+      "steps": [
+        "Start the rice according to the packet.",
+        "Season the salmon and sear skin-side down in a hot pan for 4 minutes.",
+        "Flip, add butter and lemon slices, and baste for 2 minutes.",
+        "Serve the salmon on wilted spinach with rice and the pan butter."
+      ]
+    },
+    {
+      "title": "Honey Yogurt Oat Bowl",
+      "emoji": "🥣",
+      "minutes": 5,
+      "vegetarian": true,
+      "base": ["yogurt", "oats", "honey"],
+      "steps": [
+        "Spoon yogurt into a bowl.",
+        "Top with oats.",
+        "Drizzle with honey and eat immediately."
+      ]
+    },
+    {
+      "title": "Honey Butter Toast",
+      "emoji": "🍞",
+      "minutes": 8,
+      "vegetarian": true,
+      "base": ["bread", "butter", "honey"],
+      "steps": [
+        "Toast the bread until crisp.",
+        "Spread generously with butter while hot.",
+        "Drizzle honey over the top and serve."
+      ]
+    },
+    {
+      "title": "Bean & Cheese Quesadilla",
+      "emoji": "🫓",
+      "minutes": 12,
+      "vegetarian": true,
+      "base": ["canned beans", "tortilla", "cheese", "onion", "hot sauce"],
+      "steps": [
+        "Rinse and roughly mash the beans with diced onion and hot sauce.",
+        "Spread onto half a tortilla and top with cheese.",
+        "Fold and toast in a dry pan 2 minutes a side until the cheese melts.",
+        "Cut into wedges and serve."
+      ]
+    },
+    {
+      "title": "Honey Garlic Chicken",
+      "emoji": "🍯",
+      "minutes": 22,
+      "vegetarian": false,
+      "base": ["chicken breast", "honey", "soy sauce", "garlic", "rice"],
+      "steps": [
+        "Start the rice.",
+        "Sear bite-size chicken pieces until golden; set aside.",
+        "Cook garlic briefly, then add honey and soy sauce to make a glaze.",
+        "Return the chicken, toss until sticky, and serve on rice."
+      ]
+    },
+    {
+      "title": "Bacon Fried Rice",
+      "emoji": "🍳",
+      "minutes": 15,
+      "vegetarian": false,
+      "base": ["rice", "bacon", "egg", "spring onion", "soy sauce"],
+      "steps": [
+        "Fry chopped bacon until crisp and leave the fat in the pan.",
+        "Push bacon aside, scramble the egg, then add cold rice.",
+        "Fry everything together for 3 minutes with a splash of soy sauce.",
+        "Finish with spring onion."
+      ]
+    },
+    {
+      "title": "Chili Garlic Noodles",
+      "emoji": "🍜",
+      "minutes": 10,
+      "vegetarian": true,
+      "base": ["noodle", "chili", "garlic", "soy sauce", "olive oil"],
+      "steps": [
+        "Boil the noodles and drain, reserving a little water.",
+        "Sizzle minced garlic and chili in olive oil until fragrant.",
+        "Add soy sauce and a spoon of noodle water; stir.",
+        "Toss the noodles through and serve right away."
+      ]
+    },
+    {
+      "title": "Veggie Yogurt Wrap",
+      "emoji": "🌯",
+      "minutes": 10,
+      "vegetarian": true,
+      "base": ["tortilla", "spinach", "tomato", "cheese", "onion", "yogurt"],
+      "steps": [
+        "Stir yogurt with a pinch of salt to make a quick sauce.",
+        "Warm the tortilla in a dry pan.",
+        "Spread with yogurt and fill with spinach, tomato, onion, and cheese.",
+        "Roll up tightly and slice in half."
+      ]
+    },
+    {
+      "title": "Fluffy French Toast",
+      "emoji": "🍞",
+      "minutes": 12,
+      "vegetarian": true,
+      "base": ["bread", "egg", "honey", "butter"],
+      "steps": [
+        "Whisk eggs with a splash of water.",
+        "Soak thick slices of bread for 20 seconds a side.",
+        "Fry in butter over medium heat until golden, 2 minutes a side.",
+        "Drizzle with honey and serve warm."
+      ]
+    },
+    {
+      "title": "Beef Broccoli Rice Bowl",
+      "emoji": "🍚",
+      "minutes": 25,
+      "vegetarian": false,
+      "base": ["ground beef", "broccoli", "soy sauce", "garlic", "rice"],
+      "steps": [
+        "Start the rice.",
+        "Brown the ground beef, breaking it apart as it cooks.",
+        "Add garlic and broccoli with a splash of water; cover and steam 4 minutes.",
+        "Season with soy sauce and pile everything onto the rice."
+      ]
+    }
+  ]
+}
