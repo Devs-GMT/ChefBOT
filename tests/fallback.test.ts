@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { ALL_INGREDIENT_IDS } from "@/lib/ingredients";
-import { curatedRecipeCount, selectFallbackRecipes } from "@/lib/fallback";
+import {
+  curatedRecipeCount,
+  findCuratedRecipe,
+  selectFallbackRecipes,
+} from "@/lib/fallback";
 import type { RecipeRequest } from "@/shared/recipe-schema";
 
 function request(overrides: Partial<RecipeRequest> = {}): RecipeRequest {
@@ -103,5 +107,17 @@ describe("selectFallbackRecipes", () => {
         expect(valid.has(id)).toBe(true);
       }
     }
+  });
+});
+
+describe("findCuratedRecipe", () => {
+  it("finds a cookbook recipe by its normalized on-chain title", () => {
+    const found = findCuratedRecipe("  GARLIC egg fried rice ");
+    expect(found?.title).toBe("Garlic Egg Fried Rice");
+    expect(found?.steps.length).toBeGreaterThan(0);
+  });
+
+  it("returns null for dishes outside the cookbook", () => {
+    expect(findCuratedRecipe("Mystery Stew")).toBeNull();
   });
 });

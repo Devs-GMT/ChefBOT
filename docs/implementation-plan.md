@@ -1,8 +1,8 @@
-# ChefBOT — Implementation Plan
+﻿# ChefBOT â€” Implementation Plan
 
-Status legend: `pending` · `in progress` · `done` · `blocked`
+Status legend: `pending` Â· `in progress` Â· `done` Â· `blocked`
 
-Target: hackathon-ready MVP. Select ingredients → three AI recipes → record a cooking stamp on BOT Chain → leaderboard/My Kitchen read on-chain data.
+Target: hackathon-ready MVP. Select ingredients â†’ three AI recipes â†’ record a cooking stamp on BOT Chain â†’ leaderboard/My Kitchen read on-chain data.
 
 ## Verified configuration (authoritative sources)
 
@@ -18,7 +18,7 @@ Target: hackathon-ready MVP. Select ingredients → three AI recipes → record 
 | Testnet faucet | `https://faucet.botchain.ai` | official links |
 | AI provider | OpenAI `gpt-4o-mini`, key server-side in Worker | user decision |
 | Hosting | Vercel (frontend) + Cloudflare Worker (AI) | user decision |
-| Contract deployment | User deploys via Remix IDE — agent never deploys | user constraint |
+| Contract deployment | User deploys via Remix IDE â€” agent never deploys | user constraint |
 
 ## Stack
 
@@ -33,15 +33,15 @@ Target: hackathon-ready MVP. Select ingredients → three AI recipes → record 
 Normalization (implemented byte-identically in Solidity and TypeScript):
 
 1. Trim leading/trailing ASCII whitespace: `0x20` (space), `0x09` (tab), `0x0A` (LF), `0x0D` (CR).
-2. Lowercase ASCII letters only: bytes `0x41–0x5A` → `+0x20`. Non-ASCII bytes unchanged.
-3. `key = keccak256(bytes(normalizedTitle))` — plain text hash, never `abi.encode`.
+2. Lowercase ASCII letters only: bytes `0x41â€“0x5A` â†’ `+0x20`. Non-ASCII bytes unchanged.
+3. `key = keccak256(bytes(normalizedTitle))` â€” plain text hash, never `abi.encode`.
 4. Contract re-normalizes internally (`recipeKey(string)` pure view exposes the algorithm for parity tests). Frontend uses `lib/recipe-key.ts` to predict `Cooked` state.
 
-Test vectors: `"Fried Rice"`, `"fried rice"`, `" fried rice "` → same key.
+Test vectors: `"Fried Rice"`, `"fried rice"`, `" fried rice "` â†’ same key.
 
 ## Milestones
 
-### M0 — Repository audit & scaffold (done)
+### M0 â€” Repository audit & scaffold (done)
 
 - [x] Read AGENTS.md + PRD, audit repo (greenfield: no app code, no Worker, not a git repo)
 - [x] Verify BOT Chain network values from official docs
@@ -50,35 +50,35 @@ Test vectors: `"Fried Rice"`, `"fried rice"`, `" fried rice "` → same key.
 - [x] ESLint / typecheck / vitest / build scripts wired
 - [x] `.env.example` with placeholders only
 
-**Verification:** `npm run lint` ✓ · `npm run typecheck` ✓ · `npm test` ✓ (1) · `npm run build` ✓ (static).
+**Verification:** `npm run lint` âœ“ Â· `npm run typecheck` âœ“ Â· `npm test` âœ“ (1) Â· `npm run build` âœ“ (static).
 
-### M1 — Domain model & smart contract (done)
+### M1 â€” Domain model & smart contract (done)
 
 - [x] `lib/recipe-key.ts` + parity test vectors (ASCII trim + lowercase, keccak256)
 - [x] `contracts/ChefBOT.sol`: Dish/dishes/dishKeys/cooked/myDishes, `cookIt`, `getDishes`, `getMyDishes`, `getDishKeys`, `getDish`, `recipeKey`, `Cooked` event, custom errors
 - [x] Guards: EmptyTitle, TitleTooLong (64 B), EmojiTooLong (16 B), AlreadyCooked, checked-math uint32 overflow, first-time registration, event emission
-- [x] Hardhat 3 test suite — **16/16 passing** (`npm run test:contract`)
-- [x] ABI export: `npm run abi:export` → `lib/abi/ChefBOT.ts`
-- [x] `docs/remix-deployment.md` (compiler 0.8.34/opt 200, Injected Provider, chain 968→677, testnet checklist, verification, gas/size notes)
+- [x] Hardhat 3 test suite â€” **16/16 passing** (`npm run test:contract`)
+- [x] ABI export: `npm run abi:export` â†’ `lib/abi/ChefBOT.ts`
+- [x] `docs/remix-deployment.md` (compiler 0.8.34/opt 200, Injected Provider, chain 968â†’677, testnet checklist, verification, gas/size notes)
 
-**Verification:** lint ✓ · typecheck ✓ · vitest 17 ✓ · hardhat 16 ✓ · build ✓.
+**Verification:** lint âœ“ Â· typecheck âœ“ Â· vitest 17 âœ“ Â· hardhat 16 âœ“ Â· build âœ“.
 Deployed bytecode 4,779 B (19% of EIP-170 limit). No address fabricated.
 
-### M2 — Recipe service & fallback (done)
+### M2 â€” Recipe service & fallback (done)
 
 - [x] Worker `POST /recipes`: input validation, CORS allowlist, 20 req/IP/hour rate limit, request-size cap
 - [x] OpenAI call with ~7s abort, JSON-mode prompt
-- [x] Output validation: exactly 3 recipes, required fields, types, ≤8 steps, string caps; safe error responses (no provider details)
+- [x] Output validation: exactly 3 recipes, required fields, types, â‰¤8 steps, string caps; safe error responses (no provider details)
 - [x] Extensible router for future shared endpoints (`/aura`, `/study`, `/ask`, GitHub auth scaffold)
 - [x] `data/recipes.json` (~25 curated recipes with categories, uses/missing/steps/minutes/vegetarian)
 - [x] Frontend: 8s timeout, overlap-scored fallback, "House favourites" label, loading/error states
 - [x] vitest: schema validation, timeout, fallback matching
 
-**Verification:** vitest 64 ✓ · lint ✓ · typecheck ✓ · worker tsc ✓ · `wrangler dev` smoke ✓ (/health 200, invalid JSON 400, valid no-key 503, CORS preflight 204). Shared schema in `shared/recipe-schema.ts` imported by frontend + Worker; Worker entry exports only the default handler (runtime helpers in `worker/src/runtime.ts`).
+**Verification:** vitest 64 âœ“ Â· lint âœ“ Â· typecheck âœ“ Â· worker tsc âœ“ Â· `wrangler dev` smoke âœ“ (/health 200, invalid JSON 400, valid no-key 503, CORS preflight 204). Shared schema in `shared/recipe-schema.ts` imported by frontend + Worker; Worker entry exports only the default handler (runtime helpers in `worker/src/runtime.ts`).
 
-**Acceptance:** valid → exactly 3 recipes; simulated timeout/500/invalid JSON → fallback with label.
+**Acceptance:** valid â†’ exactly 3 recipes; simulated timeout/500/invalid JSON â†’ fallback with label.
 
-### M3 — Frontend experience (done, incl. landing/app split)
+### M3 â€” Frontend experience (done, incl. landing/app split)
 
 - [x] Floating `ChefBOT` pill nav (sticky)
 - [x] Media-led hero: "Real Food. Real Fast." + manifesto + Start cooking CTA
@@ -87,61 +87,61 @@ Deployed bytecode 4,779 B (19% of EIP-170 limit). No address fabricated.
 - [x] Recipe cards: title, emoji, minutes, uses, missing (red), expandable steps
 - [x] Most Cooked: red bars from contract reads, sorted, counts, empty/no-config/error states
 - [x] Manifesto footer: "Cooked on BOT Chain.", botchain.ai, explorer link
-- [x] Unsplash imagery (URLs verified 200), reduced-motion, focus states, keyboard nav, responsive (≥44px targets, no horizontal scroll)
+- [x] Unsplash imagery (URLs verified 200), reduced-motion, focus states, keyboard nav, responsive (â‰¥44px targets, no horizontal scroll)
 - [x] **Page split:** `/` landing (LandingNav/Hero/Stats/Manifesto/How/Features/FAQ) + `/app` tool (AppNav + CookFlow + Leaderboard + My Kitchen)
 
-**Verification:** lint ✓ · typecheck ✓ · vitest ✓ · build ✓ (`/` + `/app` static) · dev render ✓ both routes.
+**Verification:** lint âœ“ Â· typecheck âœ“ Â· vitest âœ“ Â· build âœ“ (`/` + `/app` static) Â· dev render âœ“ both routes.
 
-### M4 — Wallet integration (done)
+### M4 â€” Wallet integration (done)
 
 - [x] wagmi/viem config: chain 968 testnet + 677 mainnet (`lib/wagmi.ts`, verified RPC/explorer), add/switch network flow; target via `NEXT_PUBLIC_CHEFBOT_CHAIN_ID` (default 677)
 - [x] MetaMask connect/disconnect, shortened address (`WalletButton` in AppNav; install link when no provider)
-- [x] `cookIt` tx states: idle → wallet prompt → pending → confirmed/rejected/failed, explorer link from real hash (`CookButton`)
-- [x] Duplicate prevention: contract-enforced, UI shows `Cooked ✓` from `cooked[key][addr]` (`useIsCooked`)
+- [x] `cookIt` tx states: idle â†’ wallet prompt â†’ pending â†’ confirmed/rejected/failed, explorer link from real hash (`CookButton`)
+- [x] Duplicate prevention: contract-enforced, UI shows `Cooked âœ“` from `cooked[key][addr]` (`useIsCooked`)
 - [x] Post-receipt refresh of `getDishes`/`getMyDishes` (`useRefreshOnChain` prefix-invalidation of `["chefbot"]`)
-- [x] Recipe-card "I cooked it 🍳" action; click while disconnected prompts connect; wrong network prompts switch
-- [x] My Kitchen full states: disconnected → connect, loading, empty, error+retry, ready grid (react-query, auto-updates on wallet change)
+- [x] Recipe-card "I cooked it ðŸ³" action; click while disconnected prompts connect; wrong network prompts switch
+- [x] My Kitchen full states: disconnected â†’ connect, loading, empty, error+retry, ready grid (react-query, auto-updates on wallet change)
 - [x] `CONTRACT_ADDRESS` unset placeholder + explanatory notices (CookButton + My Kitchen + Leaderboard)
 - [x] Providers: `app/providers.tsx` (WagmiProvider + QueryClientProvider), unit/component tests for wallet, cook, kitchen
 
-**Acceptance:** leaderboard counts change only from confirmed on-chain reads ✓ (react-query invalidation after receipt; reads disabled without configured address).
+**Acceptance:** leaderboard counts change only from confirmed on-chain reads âœ“ (react-query invalidation after receipt; reads disabled without configured address).
 
-### M5 — Integration testing (done)
+### M5 â€” Integration testing (done)
 
-- [x] End-to-end with mocked AI Worker — `tests/e2e-recipes.test.tsx` dispatches the UI's fetch to the **real Worker handler** (`worker/src/index.ts`) with canned OpenAI responses; covers AI-success ("Tonight's picks", 3 judul) and provider-500 fallback ("House favourites"), asserting the client→Worker→OpenAI call chain
-- [x] Missing contract address, unsupported network (switch flow), tx rejection/failure paths — `cook-button`/`wallet-button`/`my-kitchen`/`leaderboard` tests
-- [x] Loading/empty/error states + ingredient-selection component tests — `ingredient-picker`, `cook-flow`, `recipe-card`, `leaderboard`, `my-kitchen`; **responsive**: no meaningful jsdom test exists for breakpoints — verified manually (dev render at 375/768/1280, no horizontal scroll, ≥44px targets) and documented in README
-- [x] Production build check — `npm run build` ✓ (`/` + `/app` static)
+- [x] End-to-end with mocked AI Worker â€” `tests/e2e-recipes.test.tsx` dispatches the UI's fetch to the **real Worker handler** (`worker/src/index.ts`) with canned OpenAI responses; covers AI-success ("Tonight's picks", 3 judul) and provider-500 fallback ("House favourites"), asserting the clientâ†’Workerâ†’OpenAI call chain
+- [x] Missing contract address, unsupported network (switch flow), tx rejection/failure paths â€” `cook-button`/`wallet-button`/`my-kitchen`/`leaderboard` tests
+- [x] Loading/empty/error states + ingredient-selection component tests â€” `ingredient-picker`, `cook-flow`, `recipe-card`, `leaderboard`, `my-kitchen`; **responsive**: no meaningful jsdom test exists for breakpoints â€” verified manually (dev render at 375/768/1280, no horizontal scroll, â‰¥44px targets) and documented in README
+- [x] Production build check â€” `npm run build` âœ“ (`/` + `/app` static)
 
-**Verification:** vitest **104/104** ✓ · lint ✓ · typecheck ✓ · `test:contract` 16/16 ✓ · build ✓.
+**Verification:** vitest **104/104** âœ“ Â· lint âœ“ Â· typecheck âœ“ Â· `test:contract` 16/16 âœ“ Â· build âœ“.
 
-### M6 — Release preparation (done)
+### M6 â€” Release preparation (done)
 
-- [x] README — local dev, scripts, env-var table, Worker deploy (`wrangler` + secrets + CORS), Remix guide link, Vercel deploy, testnet/mainnet config, manual responsive smoke checklist, troubleshooting pointers
-- [x] `.env.example` (placeholders + verified testnet address with honest labeling) · `.gitignore` (`.env*` ignored, only `.env.example` re-included) · **CI workflow** `.github/workflows/ci.yml` (frontend job: lint→typecheck→vitest→hardhat→build; worker job: `npm ci`+typecheck) — runs after first push
-- [x] Mainnet release checklist → `docs/release-checklist.md` (preflight gates, testnet exercise [deployment verified, exercise still open], Worker/CORS/secrets, mainnet deploy + on-chain anchor verification, post-release/rollback)
-- [x] Security review → `docs/security-review.md` (threat model B1–B5, controls+evidence, `npm audit` triage: 5 high = dev-only `braces`, deferred with reason; worker 0 vulns; accepted risks: prompt-injection blast radius, in-memory rate limiter on serverless, no CSP yet) + hardening added: security headers in `next.config.ts` (nosniff/DENY/referrer/permissions-policy)
+- [x] README â€” local dev, scripts, env-var table, Worker deploy (`wrangler` + secrets + CORS), Remix guide link, Vercel deploy, testnet/mainnet config, manual responsive smoke checklist, troubleshooting pointers
+- [x] `.env.example` (placeholders + verified testnet address with honest labeling) Â· `.gitignore` (`.env*` ignored, only `.env.example` re-included) Â· **CI workflow** `.github/workflows/ci.yml` (frontend job: lintâ†’typecheckâ†’vitestâ†’hardhatâ†’build; worker job: `npm ci`+typecheck) â€” runs after first push
+- [x] Mainnet release checklist â†’ `docs/release-checklist.md` (preflight gates, testnet exercise [deployment verified, exercise still open], Worker/CORS/secrets, mainnet deploy + on-chain anchor verification, post-release/rollback)
+- [x] Security review â†’ `docs/security-review.md` (threat model B1â€“B5, controls+evidence, `npm audit` triage: 5 high = dev-only `braces`, deferred with reason; worker 0 vulns; accepted risks: prompt-injection blast radius, in-memory rate limiter on serverless, no CSP yet) + hardening added: security headers in `next.config.ts` (nosniff/DENY/referrer/permissions-policy)
 
-**Acceptance:** documentation complete; DoD items mapped to evidence — see section below.
+**Acceptance:** documentation complete; DoD items mapped to evidence â€” see section below.
 
-## Definition of Done (PRD §11) → evidence
+## Definition of Done (PRD Â§11) â†’ evidence
 
 | # | DoD item | Evidence | Status |
 |---|---|---|---|
-| 1 | Open without wallet | `/` + `/app` render with no wallet (dev smoke, SSR "Connect wallet") | ✓ dev |
-| 2 | Pick ≥2 ingredients + preferences | `ingredient-picker.test` · `cook-flow.test` (CTA <2, time/veg args) | ✓ |
-| 3 | Three valid recipes from AI or fallback | `e2e-recipes.test` (real Worker handler → AI + fallback) · `recipes-client.test` | ✓ |
-| 4 | I cooked it → connect → switch to BOT Chain | `cook-button.test` (connect prompt, switch-to-677 flow) · `wallet-button.test` | ✓ code |
-| 5 | Approve → success + transaction link | `cook-button.test` ("Stamped! ✓" + explorer link from real hash) | ✓ code |
-| 6 | Leaderboard increases from contract data | `useRefreshOnChain` invalidation + `leaderboard.test`; reads only from chain | ✓ code |
-| 7 | Cooked ✓ + appears in My Kitchen | `cook-button.test` (disabled Cooked ✓) · `my-kitchen.test` (grid, keys→dishes) | ✓ code |
-| 8 | Footer → BOT site + correct explorer page | `site-footer.test` — botchain.ai link + contract `/address/…` link when configured, generic explorer fallback; verified headers response | ✓ |
-| 9 | Usable on mobile | manual responsive smoke (375/768/1280) in README | ✓ dev |
+| 1 | Open without wallet | `/` + `/app` render with no wallet (dev smoke, SSR "Connect wallet") | âœ“ dev |
+| 2 | Pick â‰¥2 ingredients + preferences | `ingredient-picker.test` Â· `cook-flow.test` (CTA <2, time/veg args) | âœ“ |
+| 3 | Three valid recipes from AI or fallback | `e2e-recipes.test` (real Worker handler â†’ AI + fallback) Â· `recipes-client.test` | âœ“ |
+| 4 | I cooked it â†’ connect â†’ switch to BOT Chain | `cook-button.test` (connect prompt, switch-to-677 flow) Â· `wallet-button.test` | âœ“ code |
+| 5 | Approve â†’ success + transaction link | `cook-button.test` ("Stamped! âœ“" + explorer link from real hash) | âœ“ code |
+| 6 | Leaderboard increases from contract data | `useRefreshOnChain` invalidation + `leaderboard.test`; reads only from chain | âœ“ code |
+| 7 | Cooked âœ“ + appears in My Kitchen | `cook-button.test` (disabled Cooked âœ“) Â· `my-kitchen.test` (grid, keysâ†’dishes) | âœ“ code |
+| 8 | Footer â†’ BOT site + correct explorer page | `site-footer.test` â€” botchain.ai link + contract `/address/â€¦` link when configured, generic explorer fallback; verified headers response | âœ“ |
+| 9 | Usable on mobile | manual responsive smoke (375/768/1280) in README | âœ“ dev |
 
-"✓ code" = covered by automated tests; "production-domain" verification of
-items 1, 4–8 is **blocked on owner-run deployments** (Worker live,
-Vercel live, mainnet Remix deploy) — execute
-`docs/release-checklist.md` §2–§3 and re-walk DoD 1–9 on the live domain.
+"âœ“ code" = covered by automated tests; "production-domain" verification of
+items 1, 4â€“8 is **blocked on owner-run deployments** (Worker live,
+Vercel live, mainnet Remix deploy) â€” execute
+`docs/release-checklist.md` Â§2â€“Â§3 and re-walk DoD 1â€“9 on the live domain.
 
 ## Dependencies & external requirements (blockers)
 
@@ -165,14 +165,21 @@ npm run build       # next build
 
 ## Progress log
 
-- 2026-10-16: M0 done — scaffold verified (lint/typecheck/test/build).
-- 2026-10-16: M1 done — contract + 16 Hardhat tests + recipe-key parity (17 vitest) + ABI export + Remix guide.
-- 2026-10-16: M2 started — ingredient vocabulary, fallback recipes, Worker POST /recipes.
-- 2026-10-16: M2 done — shared schema, Worker (runtime.ts + index.ts), frontend client w/ fallback; vitest 64; wrangler dev smoke verified.
-- 2026-10-16: M3 started — frontend experience.
-- 2026-10-16: M3 core done — nav/hero/cook-flow/cards/leaderboard/footer, tokens, Unsplash; vitest 78; dev render verified. Cook action + My Kitchen wallet states deferred to M4.
-- 2026-10-16: M3 split done — `/` landing (Landing* sections) + `/app` tool page (AppNav); lint/typecheck/test/build + both-route render verified.
-- 2026-10-16: M4 done — wagmi 968+677 config, Providers, WalletButton (connect/switch/disconnect/install-link), CookButton (connect-prompt, switch, cookIt, receipt, explorer link, Cooked ✓), MyKitchen full states, react-query invalidation; vitest 102 ✓ · lint ✓ · typecheck ✓ · build ✓ (/ + /app static).
-- 2026-10-16: M5 done — e2e pipeline test (UI → client → real Worker handler → mocked OpenAI; AI + fallback), full gate: vitest 104 ✓ · lint ✓ · typecheck ✓ · hardhat 16 ✓ · build ✓. Responsive documented as manual smoke.
-- 2026-10-16: M6 done — README, CI workflow, `docs/security-review.md`, `docs/release-checklist.md`, security headers in `next.config.ts`, DoD mapping. **Discovery: testnet contract `0x5191b250E9F18d640B2138a1Da0409be0f1dD092` (chain 968) verified on-chain** — `recipeKey("Fried Rice")` matches repo anchor via `rpc.bohr.life`; `getDishes()` empty (testnet exercise not yet run); mainnet `eth_getCode` = `0x` (not deployed). `.env.example` corrected to label testnet + `CHAIN_ID=968`. Contract explorer link added to site-footer (vitest 106).
-- 2026-10-16: Design overhaul done — whole site migrated to DESIGN.md parchment system (light): globals tokens + `.band-dark` focus ring, BriefBanner, SectionTag, ink hero/manifesto bands (no photo), mono ticker replacing emoji marquee, red-only stats/leaderboard-data/alarm callouts, white shadow-card panels, pill ink buttons. Legacy dark-kitchen tokens removed after grep-clean (0 hits). Full gate: lint ✓ · typecheck ✓ · vitest 106/106 ✓ · hardhat 16/16 ✓ · build ✓ (/ + /app static) · worker tsc ✓ · `next start` smoke: `/` and `/app` render with 0 legacy classes.
+- 2026-10-16: M0 done â€” scaffold verified (lint/typecheck/test/build).
+- 2026-10-16: M1 done â€” contract + 16 Hardhat tests + recipe-key parity (17 vitest) + ABI export + Remix guide.
+- 2026-10-16: M2 started â€” ingredient vocabulary, fallback recipes, Worker POST /recipes.
+- 2026-10-16: M2 done â€” shared schema, Worker (runtime.ts + index.ts), frontend client w/ fallback; vitest 64; wrangler dev smoke verified.
+- 2026-10-16: M3 started â€” frontend experience.
+- 2026-10-16: M3 core done â€” nav/hero/cook-flow/cards/leaderboard/footer, tokens, Unsplash; vitest 78; dev render verified. Cook action + My Kitchen wallet states deferred to M4.
+- 2026-10-16: M3 split done â€” `/` landing (Landing* sections) + `/app` tool page (AppNav); lint/typecheck/test/build + both-route render verified.
+- 2026-10-16: M4 done â€” wagmi 968+677 config, Providers, WalletButton (connect/switch/disconnect/install-link), CookButton (connect-prompt, switch, cookIt, receipt, explorer link, Cooked âœ“), MyKitchen full states, react-query invalidation; vitest 102 âœ“ Â· lint âœ“ Â· typecheck âœ“ Â· build âœ“ (/ + /app static).
+- 2026-10-16: M5 done â€” e2e pipeline test (UI â†’ client â†’ real Worker handler â†’ mocked OpenAI; AI + fallback), full gate: vitest 104 âœ“ Â· lint âœ“ Â· typecheck âœ“ Â· hardhat 16 âœ“ Â· build âœ“. Responsive documented as manual smoke.
+- 2026-10-16: M6 done â€” README, CI workflow, `docs/security-review.md`, `docs/release-checklist.md`, security headers in `next.config.ts`, DoD mapping. **Discovery: testnet contract `0x5191b250E9F18d640B2138a1Da0409be0f1dD092` (chain 968) verified on-chain** â€” `recipeKey("Fried Rice")` matches repo anchor via `rpc.bohr.life`; `getDishes()` empty (testnet exercise not yet run); mainnet `eth_getCode` = `0x` (not deployed). `.env.example` corrected to label testnet + `CHAIN_ID=968`. Contract explorer link added to site-footer (vitest 106).
+- 2026-10-16: Design overhaul done â€” whole site migrated to DESIGN.md parchment system (light): globals tokens + `.band-dark` focus ring, BriefBanner, SectionTag, ink hero/manifesto bands (no photo), mono ticker replacing emoji marquee, red-only stats/leaderboard-data/alarm callouts, white shadow-card panels, pill ink buttons. Legacy dark-kitchen tokens removed after grep-clean (0 hits). Full gate: lint âœ“ Â· typecheck âœ“ Â· vitest 106/106 âœ“ Â· hardhat 16/16 âœ“ Â· build âœ“ (/ + /app static) Â· worker tsc âœ“ Â· `next start` smoke: `/` and `/app` render with 0 legacy classes.
+- 2026-10-17: Landing strict DESIGN.md pass â€” SectionProgressDots replace thin bar on `/`, stats â†’ 3 red blocks (155px numbers), nav â†’ real pills, hero/manifesto/FAQ subtitles full parchment, section padding 80/128 tokens, headingâ†’grid 80px, cards 24px padding, features h2 96px. Verified on dev :3000 (0 legacy classes, 0 `parchment/70`).
+- 2026-10-17: MetaMask + chain-aware fixes done (TDD, on top of baseline `15af269`) â€” Bug 1: `metaMask()` SDK connector (missing optional dep `@metamask/connect-evm`) replaced by `injected({ target: "metaMask" })` + generic `injected()` fallback + shared `lib/wallet-connect.ts` (`orderedConnectors`, `connectFirstAvailable`); Bug 2: all reads chain-aware via `publicClientFor()` (was pinned to mainnet 677 while the contract lives on 968); Bug 3: explorer URLs via `explorerUrlFor/explorerTxUrl/explorerAddressUrl` (scan.bohr.life on 968); Bug 4: `ssr: true` in wagmi config; Bug 5: receipt watched with `chainId: target`; Bug 6: `wrong_chain` error kind; also fixed `fetchIsCooked` arg order `[key, cook]`. New tests: chain(9), contract-chain(4), wagmi-config(4), metamask-connect(3, simulated EIP-1193), wallet-connect(8) + wallet-errors extended. Full gate: **vitest 21 files / 135 tests âœ“** Â· hardhat 16 âœ“ Â· lint âœ“ Â· tsc âœ“ Â· next build âœ“ (/ + /app static) Â· worker tsc âœ“. Live proof: testnet 968 `eth_getCode` = 7420 bytes, `getDishes()` â†’ `[]`; mainnet 677 no code (read errors as expected). Smoke: dev :3000 `/`+`/app` 200; wrangler dev `/health` 200, POST `/recipes` â†’ 503 without key + CORS `http://localhost:3000`, OPTIONS â†’ 204.
+- 2026-10-17: Landing hero cleaned + how-it-works rebuilt to realfood.gov scrollytelling â€” Removed hero video figure (`.hero-organic` + organic-drift keyframes + play trigger) from `landing-hero.tsx`; restored outlined pill "See how it works" â†’ `#how`. Deleted `.swap-fade` CSS. Rewrote `landing-how.tsx` as static server component: each step is a full-viewport (`lg:min-h-[100svh]`) two-column panel â€” left text (mono `Step NN / 03`, ~44px h3, body, bold target line), right large SVG line-art illustration. Added `components/illustrations/{pantry,recipes,stamp}-illustration.tsx` â€” hand-drawn ink/wheat line-art (viewBox 480, stroke `#110000`, fill `#f3f0d6`/`#fdfbee`), decorative + aria-hidden with sr-only captions. Upgraded `section-dots.tsx` pill to reference pattern `â— â— â— <active label> â— â— â—`. Full gate: lint âœ“ Â· tsc âœ“ Â· vitest 21 files / 135 tests âœ“ Â· next build âœ“ (/ + /app static). Smoke dev :3000: `/`+`/app` 200; 0 hits for `hero-organic`/`swap-fade`; 3Ã— 480 SVGs, `min-h-[100svh]` panels present, STAMPED seal + target lines render.
+- 2026-10-17: Intro curtain + scroll feel landed (realfood.gov pattern) — Removed BriefBanner (deleted components/brief-banner.tsx) and SectionDots (deleted components/section-dots.tsx): single navbar only. New components/intro-curtain.tsx: pre-paint inline script adds html.intro-active on first visit per session (skips when seen or reduced-motion), green `#066742 overlay with 3 full-color food SVGs (components/illustrations/intro/{broccoli,milk,steak}-intro.tsx) flying in via CSS keyframes, curtain lifts at 2.25s while .landing-stage rises from translateY(180px) and .landing-header drops from -160px; client effect releases class + sets sessionStorage.chefbot-intro-seen after 3.5s and unlocks scroll on unmount. New components/scroll-words.tsx: scroll-linked word lighting (dim sh ? lit inherited color following scroll progress 85%?35% viewport, data-lit written straight to DOM, rAF-throttled; reduced-motion lights all) wired into manifesto body paragraph. New components/parallax-figure.tsx: ±18px Y drift on the how-panel illustrations (transform on inner div, composes with Reveal). Stats blocks now effect=grow (scaleY 0.12?1 from baseline, RevealEffect union extended). Hero entrance synced to curtain via .intro-active #hero CSS (reveal delay 2550ms, words held until lift). pp/page.tsx wraps nav/main/footer in .landing-stage + renders IntroCurtain. Full gate: lint ? · tsc ? · vitest 21 files / 135 tests ? · next build ? (/ + /app static). Smoke dev :3000: /+/app 200; HTML contains intro-overlay, 3 intro food SVG viewBoxes, pre-paint script (chefbot-intro-seen), landing-stage, landing-header, 39 data-scroll-word spans, 3 data-reveal=grow; 0 hits for brief-banner/section-dots.
+- 2026-10-17: PRD core gaps closed + realfood.gov UI pass (TDD for logic). **Core:** success state now reads the cook number from the `Cooked` event in the receipt (`lib/cooked-event.ts` → "Stamped! You're cook #N of this dish") + Share on X intent; wallet connect auto-switches/adds the target chain right after connecting (declining keeps the "Switch to BOT Chain" fallback); tx error shows Retry; leaderboard = vertical red bars (count inside, title under, tap → dish detail with cookbook steps via `findCuratedRecipe`), empty state "Be the first to cook something"; ingredient picker = WAI-ARIA food-group tabs (arrow/Home/End, per-tab counts) + removable "Your fridge" tray in a sticky action bar; CTA "Cook something →"; loading = skeleton cards + "ChefBOT is tasting ideas…"; stacked full-width recipe cards ("Uses N of your ingredients", missing as red chips, numbered steps). **UI:** shared dark floating `PillNav` (☰ on mobile; landing nav was previously not mounted), parchment hero with giant headline + photo media card and "▶ Start cooking" pill, staggered stat bars, new `LandingFoodGroups` (letter-by-letter `ScrollLetters` "Real food can be this easy." + inverted-pyramid tiers), photo-led features list, PRD §8 footer (letter-revealed "Cooked on BOT Chain.", dark glow card → botchain.ai with BOT Chain logo, "View on explorer ↗" pill → contract, red chain-ID caption, © line). Food photos self-hosted in `public/food/` (Unsplash License, credits in `public/food/CREDITS.md`); BOT Chain marks in `public/brand/`. Gate: tsc ✓ · eslint ✓ · **vitest 22 files / 155 tests ✓** · next build ✓ (/ + /app static). Browser check (Edge via playwright-core, 1440×900 + 390×844): no page errors; pick → fallback recipes → steps → bar detail flow works; leaderboard read 3 real dishes from testnet 968. Not verified live: a real `cookIt` signature (needs the owner's MetaMask) and the AI path (Worker not running locally → fallback served).
+- 2026-10-17: Landing motion overhaul + component restructure. **Structure:** `components/{landing,kitchen,ui,illustrations}` (landing sub-folders `how-it-works/`, `intro/`, `motion/`); imports + test imports updated; dead code removed (`scroll-words`, `parallax-figure`, old CSS intro keyframes, 3 intro SVGs). **Motion:** GSAP 3.15.0 + ScrollTrigger/SplitText/Flip/DrawSVG via `@gsap/react` 2.1.2, Lenis 1.3.27 smooth scroll on `/` only (pinned exact). Intro = one timeline (photos pop, "Real Food." chars rise, preheating counter, side photos fly out, curtain wipes, centre photo Flip-morphs into the hero card; click/key/wheel fast-forward; 7s safety). Hero: masked char headline, scroll recede + photo parallax. Stats bars scrub-grow (trigger = chart, not the scaled bars). Food groups: pinned stone→ink letter scrub + tiers sweep in. Manifesto: band opens inset→full-bleed, words light on scrub, velocity-reactive tickers. How it works: desktop pin (+320%), one scrubbed master timeline (pantry draws + door swings + items pop / cards fan + check / receipt prints + seal slams + burst), odometer + rail, snap to nearest step with start/end rest points; mobile plays each step on enter. Features: photo zoom/parallax, hairline draw. FAQ: smooth `<details>` height, CTA scale-in, magnetic buttons. Auto-hiding nav, scroll progress line. **Safety:** `html.motion` only via pre-paint script when JS + motion allowed, 6s fallback un-hides; reduced motion = static page, no Lenis, no pin. Gate: tsc ✓ · eslint ✓ · **vitest 23 files / 172 ✓** (+8 `intro-script.test.ts`) · build ✓; gsap/lenis chunk referenced by `/` only, not `/app`. Edge harness (1440×900 + 390×844): 0 page errors; CLS 0.002 / 0.000 (fixed from 0.131 — intro morph was resizing an in-flow element); anchor #how lands at its 96px scroll margin (fixed double offset); How-it-works snaps 1→2→3 (fixed step 2 being skipped by directional snap); reduced motion: 0 hidden elements, no pin, no curtain; JS off: content visible.
+- 2026-10-17: Intro photo fix + phone performance pass. **Intro:** replaced the Flip morph with one fixed photo layer that *is* the hero card (same image URL/`sizes`/quality via `components/landing/hero-photo.ts`, same inner crop box), clipped to a circle with `clip-path: inset(… round)` driven from a numeric proxy (the browser's shortened clip-path serialisation broke GSAP's interpolation). The circle now shows the middle of the final framing (food only — no grey table crescent) and the morph lands pixel-identical on the card (card hidden while the layer travels, swapped in one frame). Starts after `img.decode()` + idle (1.2s cap); phones: shorter cut (×1.4, no counter, one side photo); Save-Data / ≤2 GB devices skip it (`isLiteDevice`, +5 tests in `intro-script.test.ts`). Flip plugin dropped. **Bundle:** wallet stack removed from `/` — `Providers` moved to `app/app/layout.tsx`, new wallet-free `lib/chain-config.ts` (re-exported by `lib/chain.ts`/`lib/contract.ts`); landing JS 359 → 251 KB gzip, no wagmi/viem/secp256k1 chunk on `/`. **Phones:** Lenis only for fine pointers (native scroll on touch); scroll-progress without React state or per-frame layout reads; nav auto-hide tweens only on direction flips; nav blur md+ only; section animation setup deferred to idle/near-viewport on touch; scrubs converted to play-once on touch (stats bars, statement, tiers, manifesto words, FAQ CTA), desktop-only clip-path band + features zoom, CSS (compositor) tickers on touch, letter reveals → word reveals, How-it-works figures revealed whole; hero card paints from first frame on touch (LCP). **Bug found & fixed:** tiers' off-screen start state widened the page to 445px on phones (horizontal scroll, off-centre intro) → `overflow-x: clip` on the section + body. **Measured** (Edge, 390×844@3x, 4× CPU, 1.6 Mbps/150 ms; medians, noisy machine with ~0.7 GB free RAM): LCP 5.2–5.3s → 2.1–2.4s (no-motion control 2.4s); repeat-visit TBT 2.4s → ~1.6–1.7s (control 1.44s — React hydration floor); first-visit TBT 3.1s → ~2.4s; CLS 0; idle 60 fps; steady-state per-section scroll 39–48 fps (control 47–60) — remaining gap is one-shot reveals playing. Gate: tsc ✓ · eslint ✓ · vitest 23/177 ✓ · build ✓; desktop regression: CLS 0.002, anchors at scroll margin, How-it-works snaps 1→2→3, reduced-motion/no-JS fully visible.

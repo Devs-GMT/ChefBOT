@@ -1,8 +1,8 @@
-import { screen } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { WalletButton } from "@/components/wallet-button";
+import { WalletButton } from "@/components/kitchen/wallet-button";
 import { renderWithProviders } from "./render-with-providers";
 
 vi.mock("wagmi", async (importOriginal) => {
@@ -55,6 +55,10 @@ beforeEach(() => {
   } as never);
 });
 
+afterEach(() => {
+  vi.useRealTimers();
+});
+
 describe("WalletButton", () => {
   it("shows Connect and connects with the MetaMask connector", async () => {
     const user = userEvent.setup();
@@ -64,6 +68,61 @@ describe("WalletButton", () => {
     expect(connectAsync).toHaveBeenCalledWith({
       connector: { id: "metaMask", name: "MetaMask" },
     });
+  });
+
+  it("auto-switches (or adds) BOT Chain right after connecting elsewhere", async () => {
+    const user = userEvent.setup();
+    connectAsync.mockResolvedValueOnce({ accounts: [], chainId: 1 });
+    renderWithProviders(<WalletButton />);
+
+    await user.click(screen.getByRole("button", { name: "Connect wallet" }));
+    expect(switchChainAsync).toHaveBeenCalledWith({ chainId: 677 });
+  });
+
+  it("does not ask to switch when the wallet is already on BOT Chain", async () => {
+    const user = userEvent.setup();
+    connectAsync.mockResolvedValueOnce({ accounts: [], chainId: 677 });
+    renderWithProviders(<WalletButton />);
+
+    await user.click(screen.getByRole("button", { name: "Connect wallet" }));
+    expect(switchChainAsync).not.toHaveBeenCalled();
+  });
+
+  it("stays connected when the automatic switch is declined", async () => {
+    const user = userEvent.setup();
+    connectAsync.mockResolvedValueOnce({ accounts: [], chainId: 1 });
+    switchChainAsync.mockRejectedValueOnce(
+      new Error("User rejected the request."),
+    );
+    renderWithProviders(<WalletButton />);
+
+    await user.click(screen.getByRole("button", { name: "Connect wallet" }));
+    expect(switchChainAsync).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("offers a hint and Cancel when MetaMask has not answered for a while", async () => {
+    vi.useFakeTimers();
+    const reset = vi.fn();
+    vi.mocked(useConnect).mockReturnValue({
+      mutateAsync: connectAsync,
+      connectors: [{ id: "metaMask", name: "MetaMask" }],
+      isPending: true,
+      reset,
+    } as never);
+    renderWithProviders(<WalletButton />);
+    expect(screen.queryByText(/Waiting for MetaMask/)).not.toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(12_000);
+    });
+    expect(screen.getByText(/Waiting for MetaMask/)).toBeInTheDocument();
+
+    act(() => {
+      screen.getByRole("button", { name: "Cancel" }).click();
+    });
+    expect(reset).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
   });
 
   it("shows the connecting state", () => {

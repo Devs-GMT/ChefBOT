@@ -1,4 +1,8 @@
-import type { Recipe, RecipeRequest } from "../shared/recipe-schema";
+import {
+  normalizeTitle,
+  type Recipe,
+  type RecipeRequest,
+} from "../shared/recipe-schema";
 import data from "../data/recipes.json";
 
 interface CuratedRecipe {
@@ -88,4 +92,23 @@ export function selectFallbackRecipes(
   }
 
   return pick(scored, request.ingredients, limit);
+}
+
+/**
+ * Cookbook entry for an on-chain dish title (same normalization as the
+ * recipe key), so the leaderboard can show steps that never go on-chain.
+ */
+export function findCuratedRecipe(
+  title: string,
+): { title: string; emoji: string; minutes: number; steps: string[] } | null {
+  const wanted = normalizeTitle(title);
+  const found = CURATED.find((item) => normalizeTitle(item.title) === wanted);
+  return found
+    ? {
+        title: found.title,
+        emoji: found.emoji,
+        minutes: found.minutes,
+        steps: found.steps,
+      }
+    : null;
 }

@@ -2,7 +2,7 @@ import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { CookFlow } from "@/components/cook-flow";
+import { CookFlow } from "@/components/kitchen/cook-flow";
 import chefbotWorker from "@/worker/src/index";
 import {
   OPENAI_URL,
@@ -93,8 +93,9 @@ function stubNetworkToRealWorker(): void {
 
 async function pickEggRiceAndFindRecipes(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole("button", { name: "Egg" }));
-  await user.click(screen.getByRole("button", { name: "Rice" }));
-  await user.click(screen.getByRole("button", { name: "Find recipes" }));
+  await user.click(screen.getByRole("tab", { name: /Grains/ }));
+    await user.click(screen.getByRole("button", { name: "Rice" }));
+  await user.click(screen.getByRole("button", { name: "Cook something →" }));
 }
 
 beforeEach(() => {

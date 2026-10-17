@@ -152,6 +152,14 @@ https://faucet.botchain.ai) → `/app` → pick 2+ ingredients → generate →
 "I cooked it" → confirm → Stamped ✓ → leaderboard + My Kitchen update after
 the receipt.
 
+**Chain-aware behavior:** every on-chain read (leaderboard, My Kitchen,
+cooked flag) and every explorer link follows
+`NEXT_PUBLIC_CHEFBOT_CHAIN_ID` (968 → `rpc.bohr.life` / `scan.bohr.life`,
+677 → `rpc.botchain.ai` / `scan.botchain.ai`; default 677). Wallet
+connection uses MetaMask's injected EIP-1193 provider directly (no SDK
+dependency); if the wallet is on an unknown chain it triggers
+`wallet_addEthereumChain` (error 4902) with the BOT Chain parameters.
+
 ## Security
 
 See [docs/security-review.md](./docs/security-review.md): boundary
@@ -164,13 +172,22 @@ remediation paths. No secrets belong in git — `.env*` is ignored
 
 ```
 app/            routes (/ landing, /app kitchen), providers, tokens
-components/     landing-* sections, cook-flow, recipe-card, cook-button,
-                leaderboard, my-kitchen, wallet-button, navs, footer
+components/
+  landing/      "/" only: hero, stats, food-groups, manifesto, features, faq,
+                landing-nav, counter, marquee
+    how-it-works/  pinned scrollytelling (steps.ts data, step-timelines.ts keyframes)
+    intro/         intro curtain + pre-paint script (intro-script.ts, unit-tested)
+    motion/        GSAP plugin registry, Lenis smooth scroll, reveal hook, magnetic
+  kitchen/      "/app" only: cook-flow, ingredient-picker, recipe-card, cook-button,
+                leaderboard, my-kitchen, wallet-button, wallet-wait-hint, app-nav
+  ui/           shared: pill-nav, site-footer, section-tag, reveal, stagger-text,
+                scroll-letters, scroll-progress
+  illustrations/ how-it-works SVGs (data-anim hooks for GSAP)
 lib/            wagmi/chain/contract/queries/recipes/recipe-key helpers
 shared/         recipe-schema (imported by frontend AND Worker)
 worker/         Cloudflare Worker (POST /recipes) + wrangler config
 contracts/      ChefBOT.sol
 test/           Hardhat contract tests (16)
-tests/          vitest: unit + component + e2e-through-Worker (104)
+tests/          vitest: unit + component + e2e-through-Worker (172)
 docs/           plan, Remix guide, security review, release checklist
 ```

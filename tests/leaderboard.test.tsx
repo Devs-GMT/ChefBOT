@@ -2,7 +2,7 @@ import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { Leaderboard } from "@/components/leaderboard";
+import { Leaderboard } from "@/components/kitchen/leaderboard";
 import { contractAddress, fetchDishes } from "@/lib/contract";
 import { renderWithProviders } from "./render-with-providers";
 
@@ -55,6 +55,34 @@ describe("Leaderboard", () => {
     vi.mocked(fetchDishes).mockResolvedValue([]);
     renderWithProviders(<Leaderboard />);
     expect(await screen.findByText(/No dishes stamped yet/)).toBeInTheDocument();
+    expect(screen.getByText(/Be the first to cook something/)).toBeInTheDocument();
+  });
+
+  it("opens a dish when its bar is tapped, with cookbook steps when known", async () => {
+    const user = userEvent.setup();
+    vi.mocked(contractAddress).mockReturnValue(ADDRESS);
+    vi.mocked(fetchDishes).mockResolvedValue([
+      { key: "0x01", title: "garlic egg fried rice", emoji: "🍳", cooks: 7 },
+      { key: "0x02", title: "Mystery Stew", emoji: "🍲", cooks: 2 },
+    ]);
+    renderWithProviders(<Leaderboard />);
+
+    const bar = await screen.findByRole("button", {
+      name: /garlic egg fried rice, 7 cooks/i,
+    });
+    expect(bar).toHaveAttribute("aria-expanded", "false");
+    await user.click(bar);
+    expect(bar).toHaveAttribute("aria-expanded", "true");
+
+    const detail = screen.getByRole("region", { name: /garlic egg fried rice/i });
+    expect(detail).toHaveTextContent("#1 most cooked");
+    expect(screen.getByRole("list", { name: "Steps" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Mystery Stew, 2 cooks/ }));
+    expect(screen.queryByRole("list", { name: "Steps" })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: /Mystery Stew/ }),
+    ).toHaveTextContent(/steps stay in the app/i);
   });
 
   it("shows an error state with a working retry", async () => {

@@ -2,7 +2,7 @@ import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { CookFlow } from "@/components/cook-flow";
+import { CookFlow } from "@/components/kitchen/cook-flow";
 import { getRecipes } from "@/lib/recipes";
 import { renderWithProviders } from "./render-with-providers";
 import type { RecipeResult } from "@/lib/recipes";
@@ -54,7 +54,7 @@ beforeEach(() => {
 describe("CookFlow", () => {
   it("keeps the submit button disabled below two ingredients", () => {
     renderWithProviders(<CookFlow />);
-    const submit = screen.getByRole("button", { name: "Find recipes" });
+    const submit = screen.getByRole("button", { name: "Cook something →" });
     expect(submit).toBeDisabled();
     expect(
       screen.getByText("Pick at least 2 ingredients to continue."),
@@ -67,8 +67,9 @@ describe("CookFlow", () => {
 
     renderWithProviders(<CookFlow />);
     await user.click(screen.getByRole("button", { name: "Egg" }));
+    await user.click(screen.getByRole("tab", { name: /Grains/ }));
     await user.click(screen.getByRole("button", { name: "Rice" }));
-    await user.click(screen.getByRole("button", { name: "Find recipes" }));
+    await user.click(screen.getByRole("button", { name: "Cook something →" }));
 
     expect(vi.mocked(getRecipes)).toHaveBeenCalledWith({
       ingredients: ["egg", "rice"],
@@ -91,10 +92,56 @@ describe("CookFlow", () => {
 
     renderWithProviders(<CookFlow />);
     await user.click(screen.getByRole("button", { name: "Egg" }));
+    await user.click(screen.getByRole("tab", { name: /Grains/ }));
     await user.click(screen.getByRole("button", { name: "Rice" }));
-    await user.click(screen.getByRole("button", { name: "Find recipes" }));
+    await user.click(screen.getByRole("button", { name: "Cook something →" }));
 
     expect(await screen.findByText(/House favourites/)).toBeInTheDocument();
+  });
+
+  it("shows skeleton cards while ChefBOT is tasting ideas", async () => {
+    const user = userEvent.setup();
+    let resolve: (value: RecipeResult) => void = () => {};
+    vi.mocked(getRecipes).mockReturnValue(
+      new Promise<RecipeResult>((done) => {
+        resolve = done;
+      }),
+    );
+
+    renderWithProviders(<CookFlow />);
+    await user.click(screen.getByRole("button", { name: "Egg" }));
+    await user.click(screen.getByRole("button", { name: "Tofu" }));
+    await user.click(screen.getByRole("button", { name: "Cook something →" }));
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "ChefBOT is tasting ideas…",
+    );
+    expect(screen.getByLabelText("Loading recipes")).toHaveAttribute(
+      "aria-busy",
+      "true",
+    );
+
+    resolve(AI_RESULT);
+    expect(
+      await screen.findByRole("heading", { name: /Tonight's picks/ }),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Loading recipes")).not.toBeInTheDocument();
+  });
+
+  it("lists picked ingredients in a tray that can remove them", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<CookFlow />);
+
+    await user.click(screen.getByRole("button", { name: "Egg" }));
+    await user.click(screen.getByRole("tab", { name: /Grains/ }));
+    await user.click(screen.getByRole("button", { name: "Rice" }));
+    expect(screen.getByRole("button", { name: "Cook something →" })).toBeEnabled();
+
+    await user.click(screen.getByRole("button", { name: "Remove Egg" }));
+    expect(screen.getByRole("button", { name: "Cook something →" })).toBeDisabled();
+    expect(
+      screen.getByText("Pick at least 2 ingredients to continue."),
+    ).toBeInTheDocument();
   });
 
   it("sends the selected time and vegetarian preference", async () => {
@@ -103,10 +150,11 @@ describe("CookFlow", () => {
 
     renderWithProviders(<CookFlow />);
     await user.click(screen.getByRole("button", { name: "Egg" }));
+    await user.click(screen.getByRole("tab", { name: /Grains/ }));
     await user.click(screen.getByRole("button", { name: "Rice" }));
     await user.click(screen.getByRole("radio", { name: "10 min" }));
     await user.click(screen.getByRole("switch"));
-    await user.click(screen.getByRole("button", { name: "Find recipes" }));
+    await user.click(screen.getByRole("button", { name: "Cook something →" }));
 
     expect(vi.mocked(getRecipes)).toHaveBeenCalledWith({
       ingredients: ["egg", "rice"],

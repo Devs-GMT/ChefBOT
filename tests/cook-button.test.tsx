@@ -1,9 +1,13 @@
-import { screen } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { CookButton } from "@/components/cook-button";
+import { encodeAbiParameters, encodeEventTopics } from "viem";
+
+import { CookButton } from "@/components/kitchen/cook-button";
+import { chefbotAbi } from "@/lib/abi/ChefBOT";
 import { contractAddress, fetchIsCooked } from "@/lib/contract";
+import { recipeKey } from "@/lib/recipe-key";
 import type { Recipe } from "@/shared/recipe-schema";
 import { renderWithProviders } from "./render-with-providers";
 
@@ -41,6 +45,22 @@ const RECIPE: Recipe = {
 };
 
 const ADDRESS = "0x2222222222222222222222222222222222222222" as const;
+
+/** Cooked(key, cook, title, cooks) log as emitted by the contract at ADDRESS. */
+function cookedLog(cooks: number) {
+  return {
+    address: ADDRESS,
+    topics: encodeEventTopics({
+      abi: chefbotAbi,
+      eventName: "Cooked",
+      args: { key: recipeKey(RECIPE.title), cook: ADDRESS },
+    }),
+    data: encodeAbiParameters(
+      [{ type: "string" }, { type: "uint32" }],
+      [RECIPE.title, cooks],
+    ),
+  };
+}
 const connectAsync = vi.fn().mockResolvedValue(undefined);
 const switchChainAsync = vi.fn().mockResolvedValue(undefined);
 const writeContractAsync = vi.fn();
@@ -85,6 +105,10 @@ beforeEach(() => {
     isPending: false,
   } as never);
   mockConnection();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe("CookButton", () => {
@@ -138,21 +162,41 @@ describe("CookButton", () => {
     );
   });
 
-  it("shows the confirmed receipt as Stamped with an explorer link", async () => {
+  it("shows the confirmed receipt with the on-chain cook number", async () => {
     const user = userEvent.setup();
     mockConnection({ isConnected: true });
     vi.mocked(useWaitForTransactionReceipt).mockReturnValue({
-      data: { status: "success" },
+      data: { status: "success", logs: [cookedLog(14)] },
       isError: false,
       isPending: false,
     } as never);
     renderWithProviders(<CookButton recipe={RECIPE} />);
 
     await user.click(screen.getByRole("button", { name: "I cooked it 🍳" }));
-    expect(await screen.findByText("Stamped! ✓")).toBeInTheDocument();
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "Stamped! You're cook #14 of this dish",
+    );
     expect(
       screen.getByRole("link", { name: "View transaction on BOT Scan" }),
     ).toHaveAttribute("href", "https://scan.botchain.ai/tx/0xdeadbeefhash");
+    const share = screen.getByRole("link", { name: /Share on X/ });
+    expect(share.getAttribute("href")).toContain("https://x.com/intent/post");
+    expect(share.getAttribute("href")).toContain("cook+%2314");
+  });
+
+  it("still confirms the stamp when the receipt has no Cooked event", async () => {
+    const user = userEvent.setup();
+    mockConnection({ isConnected: true });
+    vi.mocked(useWaitForTransactionReceipt).mockReturnValue({
+      data: { status: "success", logs: [] },
+      isError: false,
+      isPending: false,
+    } as never);
+    renderWithProviders(<CookButton recipe={RECIPE} />);
+
+    await user.click(screen.getByRole("button", { name: "I cooked it 🍳" }));
+    expect(await screen.findByRole("status")).toHaveTextContent("Stamped!");
+    expect(screen.queryByText(/cook #/)).not.toBeInTheDocument();
   });
 
   it("shows Cooked ✓ when the wallet already stamped the recipe", async () => {
@@ -164,6 +208,28 @@ describe("CookButton", () => {
       await screen.findByRole("button", { name: "Cooked ✓" }),
     ).toBeDisabled();
     expect(screen.getByText(/already recorded/)).toBeInTheDocument();
+  });
+
+  it("lets the cook back out when MetaMask never answers the stamp", async () => {
+    mockConnection({ isConnected: true });
+    writeContractAsync.mockReturnValue(new Promise(() => {}));
+    renderWithProviders(<CookButton recipe={RECIPE} />);
+
+    vi.useFakeTimers();
+    act(() => {
+      screen.getByRole("button", { name: "I cooked it 🍳" }).click();
+    });
+    expect(screen.getByRole("button", { name: /Confirm in wallet/ })).toBeDisabled();
+
+    act(() => {
+      vi.advanceTimersByTime(12_000);
+    });
+    expect(screen.getByText(/Waiting for MetaMask/)).toBeInTheDocument();
+
+    act(() => {
+      screen.getByRole("button", { name: "Cancel" }).click();
+    });
+    expect(screen.getByRole("button", { name: "I cooked it 🍳" })).toBeEnabled();
   });
 
   it("explains a rejected transaction", async () => {

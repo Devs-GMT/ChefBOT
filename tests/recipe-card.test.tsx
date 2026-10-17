@@ -2,7 +2,7 @@ import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
-import { RecipeCard } from "@/components/recipe-card";
+import { RecipeCard } from "@/components/kitchen/recipe-card";
 import type { Recipe } from "@/shared/recipe-schema";
 import { renderWithProviders } from "./render-with-providers";
 
@@ -22,8 +22,11 @@ describe("RecipeCard", () => {
       screen.getByRole("heading", { name: /Garlic Egg Fried Rice/ }),
     ).toBeInTheDocument();
     expect(screen.getByText("15 min")).toBeInTheDocument();
+    expect(screen.getByText("Uses 2 of your ingredients")).toBeInTheDocument();
     expect(screen.getByText("rice")).toBeInTheDocument();
-    expect(screen.getByText(/Missing: garlic, butter/)).toBeInTheDocument();
+    const missing = screen.getByRole("list", { name: "Missing ingredients" });
+    expect(missing).toHaveTextContent("garlic");
+    expect(missing).toHaveTextContent("butter");
   });
 
   it("toggles the steps disclosure", async () => {
@@ -39,6 +42,7 @@ describe("RecipeCard", () => {
       screen.getByRole("button", { name: /Hide steps/ }),
     ).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByText("Cook the rice.")).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "Steps" }).tagName).toBe("OL");
 
     await user.click(screen.getByRole("button", { name: /Hide steps/ }));
     expect(screen.queryByText("Cook the rice.")).not.toBeInTheDocument();
@@ -51,6 +55,9 @@ describe("RecipeCard", () => {
         index={1}
       />,
     );
-    expect(screen.queryByText(/Missing:/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("list", { name: "Missing ingredients" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(/Nothing missing/)).toBeInTheDocument();
   });
 });

@@ -22,6 +22,9 @@
 }
 
 body {
+  /* Safety net: off-screen animation start states must never widen the
+     page on phones. clip (unlike hidden) keeps sticky/pinned elements working. */
+  overflow-x: clip;
   background: var(--color-parchment);
   color: var(--color-ink);
   font-family: var(--font-sans), system-ui, sans-serif;
@@ -74,6 +77,19 @@ body {
   transform: translate3d(0, 0, 0);
 }
 
+/* Statistics blocks grow up from the baseline while fading in. */
+[data-reveal="grow"] {
+  transform: scaleY(0.12);
+  transform-origin: bottom;
+  transition:
+    opacity 700ms cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms),
+    transform 900ms cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms);
+}
+
+[data-reveal="grow"][data-visible="true"] {
+  transform: scaleY(1);
+}
+
 .reveal-word {
   display: inline-block;
   opacity: 0;
@@ -86,6 +102,167 @@ body {
 [data-visible="true"] .reveal-word {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* ---------- Scroll-linked letter reveal (PRD §6) ---------- */
+
+.scroll-letter {
+  display: inline-block;
+  color: var(--color-stone);
+  transform: translateY(0.18em);
+  transition:
+    color 380ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.scroll-letter[data-lit="true"] {
+  color: inherit;
+  transform: translateY(0);
+}
+
+/* ---------- Footer media card glow ---------- */
+
+.footer-glow {
+  background:
+    radial-gradient(60% 70% at 50% 55%, rgba(217, 164, 65, 0.42), transparent 70%),
+    radial-gradient(35% 45% at 50% 50%, rgba(224, 54, 44, 0.18), transparent 70%);
+}
+
+/* ---------- App motion ---------- */
+
+@keyframes card-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card-rise {
+  animation: card-rise 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.chip-stagger > * {
+  animation: card-rise 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes bar-grow {
+  from {
+    transform: scaleY(0);
+  }
+
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.bar-grow {
+  transform-origin: bottom;
+  animation: bar-grow 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes stamp-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) rotate(-1.5deg);
+  }
+
+  60% {
+    opacity: 1;
+    transform: scale(1.02) rotate(0.4deg);
+  }
+
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+
+.stamp-pop {
+  animation: stamp-pop 520ms cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+/* ---------- Landing motion (GSAP — components/landing/motion) ---------- */
+
+/*
+ * html.motion is set before first paint only when JS runs and motion is
+ * allowed (components/landing/intro/intro-script.ts). Elements below are
+ * hidden solely in that state until GSAP reveals them; a timed fallback
+ * drops the class if the landing code never starts.
+ */
+html.motion [data-hero],
+html.motion [data-anim="lines"],
+html.motion [data-anim="words"],
+html.motion [data-anim="chars"],
+html.motion [data-anim="fade-up"] {
+  visibility: hidden;
+}
+
+/* Desktop unveils the hero photo card; on touch it paints from the first
+   frame (it is the LCP element). */
+@media (pointer: fine) {
+  html.motion [data-hero-card] {
+    visibility: hidden;
+  }
+}
+
+html.intro-active {
+  overflow: hidden;
+}
+
+.intro-overlay {
+  display: none;
+}
+
+.intro-active .intro-overlay {
+  display: flex;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  overflow: hidden;
+}
+
+/* Tickers driven by GSAP on the landing (velocity-reactive). */
+.marquee--js .marquee__track {
+  animation: none;
+}
+
+/* How it works: steps share one pinned stage only while motion runs. */
+.how-rail {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  html.motion .how-stage {
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  html.motion .how-grid {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    align-items: center;
+    column-gap: 2.5rem;
+  }
+
+  html.motion .how-rail {
+    display: flex;
+  }
+
+  html.motion .how-list {
+    display: grid;
+    grid-template-areas: "stack";
+  }
+
+  html.motion .how-step {
+    grid-area: stack;
+    min-height: 0;
+    padding-block: 0;
+    border-top-width: 0;
+  }
 }
 
 /* ---------- Marquee ---------- */
@@ -158,9 +335,14 @@ summary::-webkit-details-marker {
   }
 
   [data-reveal],
-  .reveal-word {
+  .reveal-word,
+  .scroll-letter {
     opacity: 1 !important;
     transform: none !important;
+  }
+
+  .scroll-letter {
+    color: inherit !important;
   }
 
   .marquee__track {
@@ -172,4 +354,9 @@ summary::-webkit-details-marker {
   html {
     scroll-behavior: smooth;
   }
+}
+
+/* Lenis owns smoothing on the landing page; native smooth scroll would fight it. */
+html.lenis {
+  scroll-behavior: auto !important;
 }
