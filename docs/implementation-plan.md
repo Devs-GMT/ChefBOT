@@ -215,3 +215,21 @@ npm run build       # next build
     - podium tap opens the detail, passport pages 1 → 2 of 3, an index card opens one full card;
     - no overflow, 0 errors.
   - **Gate:** tsc ×2, eslint, 368 Vitest, 17 Hardhat, `next build`, all green.
+- 2026-10-18: **Phase O: /app split into linked pages** (owner chose separate pages over tabs; header kept).
+  - **Routes:** `/app` (Cook), `/app/list`, `/app/recipes`, `/app/leaderboard`, `/app/kitchen`. All static; the build route table lists all five, and none is nested twice.
+  - **Shared kitchen layout:** nav, wallet and footer. The nav marks the current page with `aria-current`.
+  - **Links between pages:**
+    - "View list" goes to `/app/list`.
+    - After a stamp: "See it in My Kitchen →".
+    - Empty List and empty My Kitchen: "Find a recipe →".
+    - Leaderboard links back to Cook.
+  - **Old `/app#section` links** forward to the new pages, on load and on hash change, through a fixed allowlist.
+  - **Cook state** (picks, recipes, "New ideas" round) is kept in memory for the visit, so returning to Cook shows the same recipes.
+  - **Browser** (prod build, Edge, 390 + 1440, mocked RPC and injected wallet):
+    - each page has its own h1 and the right active pill;
+    - cook → "+ Shopping list" → View list → Cook: same recipes, 0 document loads during navigation;
+    - the wallet stays connected across pages;
+    - `/app#most-cooked` lands on `/app/leaderboard` and a hash change to `#my-kitchen` lands on `/app/kitchen`;
+    - no overflow;
+    - the only console error was the local Worker being off (fallback recipes).
+  - **Gate:** tsc ×2, eslint, 385 Vitest, 17 Hardhat, `next build`.

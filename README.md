@@ -9,7 +9,11 @@ Two surfaces:
 | Route | Purpose |
 |---|---|
 | `/` | Landing page — manifesto, how it works, features, FAQ |
-| `/app` | The kitchen — ingredient picker, AI recipes, leaderboard, My Kitchen |
+| `/app` | Cook — ingredient picker, fridge scan, AI recipes, stamp on BOT Chain |
+| `/app/list` | Shopping List — missing items as a receipt (this browser only) |
+| `/app/recipes` | My Recipes — your own recipe box (this browser only) |
+| `/app/leaderboard` | Most Cooked — podium + ladder read from the contract |
+| `/app/kitchen` | My Kitchen — your wallet's stamps as a passport |
 
 **Docs:** [PRD](./ChefBOT_Development_Plan_EN.md) ·
 [Implementation plan](./docs/implementation-plan.md) ·
@@ -203,7 +207,7 @@ remediation paths. No secrets belong in git — `.env*` is ignored
 ## Repo layout
 
 ```
-app/            routes (/ landing, /app kitchen), providers, tokens
+app/            routes (/ landing; /app, /app/list, /app/recipes, /app/leaderboard, /app/kitchen), providers, tokens
 components/
   landing/      "/" only: hero, stats, food-groups, manifesto, features, faq,
                 landing-nav, counter, marquee
