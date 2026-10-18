@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 
+import { ChefBotMark } from "@/components/ui/chefbot-mark";
+
 export interface PillNavLink {
   href: string;
   label: string;
@@ -98,9 +100,9 @@ export function PillNav({ label, homeHref, links, action, className = "" }: Pill
         >
           <Home
             href={homeHref}
-            className="flex min-h-11 items-center gap-2 rounded-full pr-3 pl-3.5 text-[15px] font-bold tracking-[-0.02em]"
+            className="group flex min-h-11 items-center gap-2 rounded-full pr-3 pl-2.5 text-[15px] font-bold tracking-[-0.02em]"
           >
-            <span aria-hidden="true" className="size-2.5 rounded-full bg-alert" />
+            <ChefBotMark className="size-7 shrink-0 transition-transform duration-300 group-hover:-rotate-6 motion-reduce:transition-none" />
             ChefBOT
           </Home>
 

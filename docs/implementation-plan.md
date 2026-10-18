@@ -247,3 +247,14 @@ npm run build       # next build
     - 0 console errors.
   - **XL note:** system DNS still resolves `*.workers.dev` to the XL block page. Edge got through via its Secure DNS (DoH), so browsers without DoH (for example some phone or in-app browsers) on XL will get the house favourites fallback until the Worker moves to a custom domain.
   - **Still open:** the owner's phone stamp on the public URL, and mainnet (needs "approve mainnet").
+- 2026-10-18: **Logo (Phase P).** Mark: a chef's hat on a little bot head. The eyes and mouth are real holes (even-odd fill) and a single Alert Red light sits in the mouth; ink parts use `currentColor`.
+  - **Choosing the variant:** 3 variants were rendered at 16 / 24 / 32 / 64 / 160 px on dark and cream. The hole-mouth version was the only one whose red dot stays visible on both backgrounds and at 16 px.
+  - **One source:** `components/ui/chefbot-mark.tsx`.
+  - **Where it appears:**
+    - pill nav (landing + every `/app` page), next to the live "ChefBOT" text;
+    - `app/icon.svg` (parchment tile, 646 B; a test checks it equals the component output), replacing Next's default favicon;
+    - `app/apple-icon.tsx` (180×180);
+    - `app/opengraph-image.tsx` (1200×630, used for Twitter too).
+  - **Checks:** prod build lists `/icon.svg`, `/apple-icon` and `/opengraph-image` as static routes. The `<head>` carries icon, apple-touch-icon, og:image and twitter:image. Nav CLS stays 0 to 0.002, with 0 errors.
+  - **Gate:** typecheck, eslint, 388 Vitest, 17 Hardhat.
+  - On Vercel the OG URL becomes absolute from `VERCEL_PROJECT_PRODUCTION_URL` (Next's metadata resolver), so no `metadataBase` is needed.
