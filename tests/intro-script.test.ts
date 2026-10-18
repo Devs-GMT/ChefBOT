@@ -70,6 +70,24 @@ describe("PREPAINT_SCRIPT", () => {
     root.className = "";
   });
 
+  it("only touches the landing page (it runs from the shared <head>)", () => {
+    window.history.pushState({}, "", "/app");
+    try {
+      run(false);
+      expect(root.className).toBe("");
+    } finally {
+      window.history.pushState({}, "", "/");
+    }
+  });
+
+  it("skips below-the-fold layout for the first frame only", () => {
+    run(false);
+    expect(root.classList.contains("intro-first")).toBe(true);
+    vi.advanceTimersByTime(100);
+    expect(root.classList.contains("intro-first")).toBe(false);
+    expect(root.classList.contains("intro-active")).toBe(true);
+  });
+
   it("records when the intro started, so a dev remount can resume instead of restarting", () => {
     delete (window as { __chefbotIntroT0?: number }).__chefbotIntroT0;
     run(false);

@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useEffect, useRef, type CSSProperties } from "react";
 
-import { InlineScript } from "@/components/ui/inline-script";
 import greens from "@/public/food/greens.jpg";
 import poke from "@/public/food/poke-bowl.jpg";
 import riceSkillet from "@/public/food/rice-skillet.jpg";
@@ -16,7 +15,6 @@ import {
   INTRO_SEEN_KEY,
   introElapsedMs,
   isLiteDevice,
-  PREPAINT_SCRIPT,
   shouldPlayIntro,
   splitIntroWord,
 } from "./intro-script";
@@ -143,7 +141,7 @@ export function IntroCurtain() {
         gsap.set(card, { autoAlpha: 1 });
       }
       layer.style.visibility = "hidden";
-      root.classList.remove("intro-active");
+      root.classList.remove("intro-active", "intro-exiting");
       try {
         sessionStorage.setItem(INTRO_SEEN_KEY, "1");
       } catch {
@@ -215,6 +213,8 @@ export function IntroCurtain() {
         return;
       }
       performance.mark("intro-exit");
+      // The page behind turns cream again just before the curtain lifts.
+      root.classList.add("intro-exiting");
       cancelAnimationFrame(raf);
       if (count) {
         count.textContent = "100";
@@ -280,13 +280,12 @@ export function IntroCurtain() {
         anim.cancel();
       }
       // Navigating away mid-intro must unlock the page.
-      root.classList.remove("motion", "motion-ready", "intro-active");
+      root.classList.remove("motion", "motion-ready", "intro-active", "intro-first", "intro-exiting");
     };
   }, []);
 
   return (
     <>
-      <InlineScript html={PREPAINT_SCRIPT} />
       {/* Inline display:none until globals.css (with !important) shows it. */}
       <div ref={overlay} className="intro-overlay" aria-hidden="true" style={{ display: "none" }}>
         <div data-intro-bg className="absolute inset-0 bg-[#066742]" />

@@ -213,6 +213,13 @@ html.intro-active {
   overflow: hidden;
 }
 
+/* Until the curtain lifts, the page itself is curtain-green, so any paint
+   before the overlay is parsed is green, never a cream/white flash. */
+html.intro-active:not(.intro-exiting),
+html.intro-active:not(.intro-exiting) body {
+  background-color: #066742;
+}
+
 .intro-overlay {
   display: none;
 }
@@ -291,6 +298,15 @@ html.intro-active {
   animation: intro-meta calc(0.6s * var(--k)) var(--ease-out) both;
   animation-delay: calc(var(--t0) + (0.52s + var(--i, 0) * 0.08s) * var(--k));
 }
+/* First frame only: the whole page is behind the curtain, so lay out just
+   the curtain — on a 4x-throttled phone the first layout of the full
+   landing took ~0.5 s and kept the screen blank. The prepaint script drops
+   the class two frames later, while the opening plays on the compositor
+   (main-thread layout can't stutter it). */
+html.intro-first #top > :not(.intro-overlay) {
+  display: none;
+}
+
 /* Hidden until the exit slides it down (JS). */
 .intro-active .landing-header {
   transform: translateY(-180%);

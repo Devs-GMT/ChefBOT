@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { PREPAINT_SCRIPT } from "@/components/landing/intro/intro-script";
+import { InlineScript } from "@/components/ui/inline-script";
+
 import "./globals.css";
 
 const geistSans = Geist({
@@ -23,7 +26,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      // The prepaint script adds landing-intro classes before hydration.
+      suppressHydrationWarning
     >
+      <head>
+        {/* In <head> so it runs before anything paints (landing page only). */}
+        <InlineScript html={PREPAINT_SCRIPT} />
+      </head>
       <body className="flex min-h-screen flex-col bg-parchment text-ink">
         <noscript>
           {/* Keep scroll-reveal content visible when JavaScript is off. */}

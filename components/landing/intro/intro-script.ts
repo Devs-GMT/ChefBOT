@@ -47,7 +47,11 @@ export function shouldPlayIntro({
   return !seen && !reduced && !lite;
 }
 
-export const PREPAINT_SCRIPT = `(function(){try{var d=document.documentElement;if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;d.classList.add("motion");var seen=false;try{seen=!!sessionStorage.getItem(${JSON.stringify(INTRO_SEEN_KEY)})}catch(e){}var n=navigator,c=n.connection,lite=!!(c&&c.saveData)||(typeof n.deviceMemory==="number"&&n.deviceMemory<=2);if(!seen&&!lite){d.classList.add("intro-active");window.__chefbotIntroT0=performance.now()}setTimeout(function(){if(!d.classList.contains("motion-ready")){d.classList.remove("motion");d.classList.remove("intro-active")}},${MOTION_FALLBACK_MS})}catch(e){}})();`;
+/**
+ * Runs from the root layout's <head> (before the body paints), on the landing
+ * page only. Also see `.intro-*` rules in globals.css.
+ */
+export const PREPAINT_SCRIPT = `(function(){try{if(location.pathname!=="/")return;var d=document.documentElement;if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;d.classList.add("motion");var seen=false;try{seen=!!sessionStorage.getItem(${JSON.stringify(INTRO_SEEN_KEY)})}catch(e){}var n=navigator,c=n.connection,lite=!!(c&&c.saveData)||(typeof n.deviceMemory==="number"&&n.deviceMemory<=2);if(!seen&&!lite){d.classList.add("intro-active","intro-first");window.__chefbotIntroT0=performance.now();requestAnimationFrame(function(){requestAnimationFrame(function(){d.classList.remove("intro-first")})})}setTimeout(function(){if(!d.classList.contains("motion-ready")){d.classList.remove("motion","intro-active","intro-first","intro-exiting")}},${MOTION_FALLBACK_MS})}catch(e){}})();`;
 
 /**
  * How long the intro has been playing (ms), from the start time the prepaint
