@@ -64,7 +64,11 @@ Plain `npm run dev` only serves its dev scripts to `localhost`, so a phone openi
 
 ```bash
 npm run dev:lan        # prints http://<laptop-ip>:3000/app — open that on the phone
+npm run preview:lan    # same, but a production build: judge speed and the intro here
 ```
+
+`dev:lan` is for quick edits; its first load is slow and briefly unstyled (dev serves
+CSS/JS late and compiles on demand). `preview:lan` is what visitors actually get.
 
 It starts the Worker on all interfaces with CORS for the LAN origin (via `--var`,
 `worker/.dev.vars` untouched) and `next dev -H 0.0.0.0` with that IP allowed

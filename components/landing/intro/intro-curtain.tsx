@@ -148,7 +148,7 @@ export function IntroCurtain() {
       const tick = () => {
         const now = Number(document.timeline.currentTime ?? 0);
         const start = Number(pop?.startTime ?? now);
-        const t = ((now - start) * (pop?.playbackRate ?? 1)) / 1000 - 0.25;
+        const t = ((now - start) * (pop?.playbackRate ?? 1)) / 1000 - 0.15;
         const p = Math.min(1, Math.max(0, t / 1.5));
         count.textContent = String(Math.round(100 * powerInOut(p))).padStart(3, "0");
         if (p < 1 && !finished) {
@@ -272,7 +272,8 @@ export function IntroCurtain() {
   return (
     <>
       <script dangerouslySetInnerHTML={{ __html: PREPAINT_SCRIPT }} />
-      <div ref={overlay} className="intro-overlay" aria-hidden="true">
+      {/* Inline display:none until globals.css (with !important) shows it. */}
+      <div ref={overlay} className="intro-overlay" aria-hidden="true" style={{ display: "none" }}>
         <div data-intro-bg className="absolute inset-0 bg-[#066742]" />
 
         {/* The hero photo itself, clipped to a circle until it morphs onto the card. */}

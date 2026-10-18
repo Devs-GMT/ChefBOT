@@ -12,7 +12,11 @@
  *     laptop instead of 127.0.0.1 (which, on the phone, is the phone).
  *
  * Options: --host <ip>  --port <web port, 3000>  --api-port <worker port, 8787>
- * Dev only. Nothing here is used by `next build` or `wrangler deploy`.
+ *          --prod  production build + `next start` instead of `next dev`
+ *                  (`npm run preview:lan`): what users get. Dev mode loads
+ *                  CSS/JS late and compiles on demand, so a phone sees a slow,
+ *                  half-styled first paint that production does not have.
+ * Nothing here is used by `wrangler deploy` or Vercel.
  */
 import { spawn, spawnSync } from "node:child_process";
 import { networkInterfaces } from "node:os";
@@ -42,6 +46,7 @@ function lanAddress() {
 const host = arg("host", lanAddress());
 const port = arg("port", "3000");
 const apiPort = arg("api-port", "8787");
+const prod = process.argv.includes("--prod");
 
 if (!host) {
   console.error("No private IPv4 found. Connect to Wi-Fi or pass --host <ip>.");
@@ -88,13 +93,22 @@ run("worker", "npx", [
   "--var", `CORS_ALLOWED_ORIGINS:${origins}`,
 ], { cwd: `${root}worker` });
 
-run("next", "npx", ["next", "dev", "-H", "0.0.0.0", "-p", port], {
-  cwd: root,
-  env: {
-    ...process.env,
-    CHEFBOT_LAN_HOST: host,
-    NEXT_PUBLIC_RECIPES_API_URL: `http://${host}:${apiPort}`,
-  },
-});
+const webEnv = {
+  ...process.env,
+  CHEFBOT_LAN_HOST: host,
+  // NEXT_PUBLIC_* is inlined at build time, so prod must build with it.
+  NEXT_PUBLIC_RECIPES_API_URL: `http://${host}:${apiPort}`,
+};
+if (prod) {
+  console.log("[dev:lan] Building for production (takes ~1 min)...");
+  const build = spawnSync("npx", ["next", "build"], { cwd: root, env: webEnv, stdio: "inherit", shell: true });
+  if (build.status !== 0) {
+    console.error("[dev:lan] Build failed; stopping.");
+    shutdown(build.status ?? 1);
+  }
+  run("next", "npx", ["next", "start", "-H", "0.0.0.0", "-p", port], { cwd: root, env: webEnv });
+} else {
+  run("next", "npx", ["next", "dev", "-H", "0.0.0.0", "-p", port], { cwd: root, env: webEnv });
+}
 
 console.log(`\n[dev:lan] Open on your phone (same Wi-Fi): http://${host}:${port}/app\n`);

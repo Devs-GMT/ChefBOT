@@ -217,8 +217,11 @@ html.intro-active {
   display: none;
 }
 
+/* !important beats the overlay's inline display:none (intro-curtain.tsx):
+   until this stylesheet loads (dev serves CSS late) the overlay stays
+   hidden instead of painting an unstyled, stretched photo. */
 .intro-active .intro-overlay {
-  display: flex;
+  display: flex !important;
   position: fixed;
   inset: 0;
   z-index: 100;
@@ -243,7 +246,7 @@ html.intro-active {
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-back: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-back-strong: cubic-bezier(0.34, 1.8, 0.64, 1);
-  --t0: 0.1s;
+  --t0: 0s;
 }
 @media (min-width: 640px) {
   .intro-overlay {
@@ -302,9 +305,10 @@ html.intro-active {
   display: inline-block;
 }
 
+/* Starts at 0.15 (not 0) so the first animated frame already shows the dish. */
 @keyframes intro-pop {
   from {
-    transform: rotate(-14deg) scale(0);
+    transform: rotate(-14deg) scale(0.15);
   }
   to {
     transform: none;
