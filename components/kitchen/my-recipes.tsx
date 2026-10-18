@@ -3,6 +3,7 @@
 import { useId, useState, type FormEvent } from "react";
 
 import { RecipeCard } from "@/components/kitchen/recipe-card";
+import { ListSearch, ShowMore } from "@/components/ui/list-controls";
 import { SectionTag } from "@/components/ui/section-tag";
 import {
   MAX_MY_MINUTES,
@@ -12,7 +13,12 @@ import {
   useMyRecipes,
   type RecipeDraft,
 } from "@/lib/my-recipes";
+import { usePagedList } from "@/lib/use-paged-list";
 import type { Recipe } from "@/shared/recipe-schema";
+
+/** Rows per page; the search appears once the cookbook outgrows a glance. */
+const PAGE = 10;
+const SEARCH_FROM = 7;
 
 const BLANK: RecipeDraft = { title: "", emoji: "", minutes: "20", ingredients: "", steps: "" };
 
@@ -42,6 +48,9 @@ export function MyRecipes() {
   const [draft, setDraft] = useState<RecipeDraft | null>(null);
   const [editing, setEditing] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
+  /** The one recipe opened into a full card (NYT Cooking "recipe box" style). */
+  const [openTitle, setOpenTitle] = useState<string | null>(null);
+  const list = usePagedList(recipes, { size: PAGE, text: (recipe) => recipe.title });
   const formId = useId();
 
   function open(next: RecipeDraft, title?: string) {
@@ -70,6 +79,7 @@ export function MyRecipes() {
       return;
     }
     close();
+    setOpenTitle(recipe.value.title);
   }
 
   const field = (key: keyof RecipeDraft) => ({
@@ -166,39 +176,84 @@ export function MyRecipes() {
       </div>
 
       {recipes.length > 0 && (
-        <div className="mt-6 space-y-4">
-          {recipes.map((recipe, index) => (
-            <RecipeCard
-              key={recipe.title}
-              recipe={recipe}
-              index={index}
-              total={recipes.length}
-              archive={false}
-              actions={
-                <>
+        <div className="mt-6">
+          {recipes.length >= SEARCH_FROM && (
+            <div className="mb-4">
+              <ListSearch label="Search your recipes" value={list.query} onChange={list.setQuery} />
+            </div>
+          )}
+          <ul aria-label="Your recipes" className="space-y-2">
+            {list.visible.map((recipe, index) => {
+              const isOpen = recipe.title === openTitle;
+              return (
+                <li key={recipe.title}>
                   <button
                     type="button"
-                    aria-label={`Edit ${recipe.title}`}
-                    onClick={() => open(toDraft(recipe), recipe.title)}
-                    className={SECONDARY}
+                    aria-expanded={isOpen}
+                    aria-label={`${recipe.title}, ${recipe.minutes} min`}
+                    onClick={() => setOpenTitle(isOpen ? null : recipe.title)}
+                    className={`flex min-h-14 w-full items-center gap-4 rounded-2xl border px-4 text-left transition-colors ${
+                      isOpen ? "border-ink bg-paper" : "border-fog bg-paper hover:border-ink/40"
+                    }`}
                   >
-                    Edit
+                    <span aria-hidden="true" className="text-2xl">
+                      {recipe.emoji}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-[16px] font-bold tracking-[-0.019em] text-ink">
+                      {recipe.title}
+                    </span>
+                    <span className="shrink-0 font-mono text-xs text-brick tabular-nums">
+                      {recipe.minutes} min
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className={`shrink-0 font-mono text-ink transition-transform duration-300 ${isOpen ? "rotate-45" : ""}`}
+                    >
+                      +
+                    </span>
                   </button>
-                  <button
-                    type="button"
-                    aria-label={`Delete ${recipe.title}`}
-                    onClick={() => {
-                      if (editing === recipe.title) close();
-                      deleteMyRecipe(recipe.title);
-                    }}
-                    className={DANGER}
-                  >
-                    Delete
-                  </button>
-                </>
-              }
-            />
-          ))}
+                  {isOpen && (
+                    <div className="mt-2">
+                      <RecipeCard
+                        recipe={recipe}
+                        index={index}
+                        total={recipes.length}
+                        archive={false}
+                        actions={
+                          <>
+                            <button
+                              type="button"
+                              aria-label={`Edit ${recipe.title}`}
+                              onClick={() => open(toDraft(recipe), recipe.title)}
+                              className={SECONDARY}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              aria-label={`Delete ${recipe.title}`}
+                              onClick={() => {
+                                if (editing === recipe.title) close();
+                                setOpenTitle(null);
+                                deleteMyRecipe(recipe.title);
+                              }}
+                              className={DANGER}
+                            >
+                              Delete
+                            </button>
+                          </>
+                        }
+                      />
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+          {list.matched === 0 && (
+            <p className="mt-4 text-sm text-brick">No recipe matches “{list.query}”.</p>
+          )}
+          {list.hasMore && <ShowMore left={list.matched - list.visible.length} onClick={list.showMore} />}
         </div>
       )}
     </section>

@@ -3,16 +3,20 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
+import { ListSearch, ShowMore } from "@/components/ui/list-controls";
 import { SectionTag } from "@/components/ui/section-tag";
 import { contractAddress, explorerAddressUrl, type DishEntry } from "@/lib/contract";
 import { fetchArchivedDish } from "@/lib/dish-archive";
 import { findCuratedRecipe } from "@/lib/fallback";
 import { useDishes } from "@/lib/queries";
+import { usePagedList } from "@/lib/use-paged-list";
 
 type Status = "loading" | "ready" | "empty" | "error" | "no-config";
 
 /** Bars shown at once — the chart stays legible on a phone. */
 const TOP = 8;
+/** Rows per page in the full ranking under the bars. */
+const ALL_PAGE = 10;
 
 function cooksLabel(cooks: number) {
   return `${cooks} cook${cooks === 1 ? "" : "s"}`;
@@ -39,11 +43,12 @@ export function Leaderboard() {
           : "ready";
 
   const dishes: DishEntry[] = data ?? [];
-  const sorted = [...dishes].sort((a, b) => b.cooks - a.cooks).slice(0, TOP);
+  const ranked = [...dishes].sort((a, b) => b.cooks - a.cooks);
+  const sorted = ranked.slice(0, TOP);
   const maxCooks = Math.max(1, sorted[0]?.cooks ?? 1);
   const totalCooks = dishes.reduce((sum, dish) => sum + dish.cooks, 0);
-  const openIndex = sorted.findIndex((dish) => dish.key === openKey);
-  const open = openIndex >= 0 ? sorted[openIndex] : undefined;
+  const openIndex = ranked.findIndex((dish) => dish.key === openKey);
+  const open = openIndex >= 0 ? ranked[openIndex] : undefined;
 
   return (
     <section
@@ -205,6 +210,22 @@ export function Leaderboard() {
             </ol>
 
             {open && <DishDetail dish={open} rank={openIndex + 1} />}
+
+            {ranked.length > TOP && (
+              <AllDishes
+                ranked={ranked}
+                openKey={openKey}
+                onToggle={(key) => {
+                  setOpenKey(openKey === key ? null : key);
+                  // The detail opens under the bars; bring it into view.
+                  requestAnimationFrame(() =>
+                    document
+                      .getElementById("dish-detail")
+                      ?.scrollIntoView?.({ block: "nearest", behavior: "smooth" }),
+                  );
+                }}
+              />
+            )}
           </>
         )}
       </div>
@@ -223,6 +244,59 @@ export function Leaderboard() {
         </p>
       )}
     </section>
+  );
+}
+
+/** Every stamped dish, ranked — searchable and paged so it scales. */
+function AllDishes({
+  ranked,
+  openKey,
+  onToggle,
+}: {
+  ranked: DishEntry[];
+  openKey: string | null;
+  onToggle: (key: string) => void;
+}) {
+  const rankOf = new Map(ranked.map((dish, index) => [dish.key, index + 1]));
+  const list = usePagedList(ranked, { size: ALL_PAGE, text: (dish) => dish.title });
+  return (
+    <div className="mt-10 border-t border-fog pt-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h3 className="text-[21px] leading-tight font-bold tracking-[-0.02em] text-ink">
+          All dishes ({ranked.length})
+        </h3>
+        <ListSearch label="Search dishes" value={list.query} onChange={list.setQuery} />
+      </div>
+      <ol aria-label="All dishes" className="mt-4 divide-y divide-fog">
+        {list.visible.map((dish) => {
+          const isOpen = dish.key === openKey;
+          return (
+            <li key={dish.key}>
+              <button
+                type="button"
+                aria-expanded={isOpen}
+                aria-controls="dish-detail"
+                onClick={() => onToggle(dish.key)}
+                className={`flex min-h-12 w-full items-center gap-3 rounded-xl px-2 text-left transition-colors hover:bg-wheat ${
+                  isOpen ? "bg-wheat" : ""
+                }`}
+              >
+                <span className="w-9 shrink-0 font-mono text-xs text-brick tabular-nums">
+                  #{rankOf.get(dish.key)}
+                </span>
+                <span aria-hidden="true" className="text-xl">
+                  {dish.emoji}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-[15px] font-medium text-ink">{dish.title}</span>
+                <span className="shrink-0 font-mono text-xs text-alert tabular-nums">{cooksLabel(dish.cooks)}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+      {list.matched === 0 && <p className="mt-4 text-sm text-brick">No dish matches “{list.query}”.</p>}
+      {list.hasMore && <ShowMore left={list.matched - list.visible.length} onClick={list.showMore} />}
+    </div>
   );
 }
 

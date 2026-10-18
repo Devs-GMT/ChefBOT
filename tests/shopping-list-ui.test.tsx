@@ -1,11 +1,11 @@
-import { screen, within } from "@testing-library/react";
+import { act, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AppNav } from "@/components/kitchen/app-nav";
 import { RecipeCard } from "@/components/kitchen/recipe-card";
 import { ShoppingList } from "@/components/kitchen/shopping-list";
-import { clearShoppingList, getShoppingList } from "@/lib/shopping-list";
+import { addShoppingItems, clearShoppingList, getShoppingList } from "@/lib/shopping-list";
 import type { Recipe } from "@/shared/recipe-schema";
 import { renderWithProviders } from "./render-with-providers";
 
@@ -74,10 +74,12 @@ describe("ShoppingList section", () => {
     expect(within(list).getByLabelText("fish sauce")).toBeInTheDocument();
 
     await user.click(within(list).getByLabelText("Garlic"));
-    expect(within(list).getByLabelText("Garlic")).toBeChecked();
+    expect(within(list).queryByLabelText("Garlic")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /1 checked/ }));
+    expect(screen.getByLabelText("Garlic")).toBeChecked();
 
     await user.click(screen.getByRole("button", { name: "Remove checked" }));
-    expect(within(list).queryByLabelText("Garlic")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Garlic")).not.toBeInTheDocument();
     expect(getShoppingList()).toEqual([{ name: "fish sauce", done: false }]);
   });
 
@@ -132,5 +134,20 @@ describe("ShoppingList section", () => {
     expect(
       screen.getByRole("button", { name: "Add missing to shopping list" }),
     ).toBeEnabled();
+  });
+
+  it("folds checked items away behind a disclosure", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<ShoppingList />);
+    act(() => addShoppingItems(["garlic", "lemon", "rice"]));
+    await user.click(screen.getByLabelText("Garlic"));
+    await user.click(screen.getByLabelText("Lemon"));
+
+    const toggle = screen.getByRole("button", { name: /2 checked/ });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByLabelText("Garlic")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Rice")).toBeInTheDocument();
+    await user.click(toggle);
+    expect(screen.getByLabelText("Garlic")).toBeChecked();
   });
 });

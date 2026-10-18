@@ -75,4 +75,37 @@ describe("My Recipes section", () => {
     await user.click(screen.getByRole("button", { name: "Delete Nasi Telur Super Kilat" }));
     expect(screen.getByText(/No recipes of your own yet/)).toBeInTheDocument();
   });
+
+  it("keeps saved recipes as compact rows that open one card at a time, with search when many", async () => {
+    const user = userEvent.setup();
+    window.localStorage.setItem(
+      "chefbot.my-recipes.v1",
+      JSON.stringify(
+        Array.from({ length: 8 }, (_, i) => ({
+          title: `My dish ${i}`,
+          emoji: "🍳",
+          minutes: 10 + i,
+          uses: [],
+          missing: [],
+          steps: ["Cook."],
+        })),
+      ),
+    );
+    resetMyRecipes();
+    renderWithProviders(<MyRecipes />);
+
+    const rows = screen.getAllByRole("button", { name: /^My dish \d+, \d+ min/ });
+    expect(rows).toHaveLength(8);
+    expect(screen.queryByRole("article")).not.toBeInTheDocument();
+
+    await user.click(rows[0]!);
+    expect(rows[0]).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getAllByRole("article")).toHaveLength(1);
+    await user.click(rows[1]!);
+    expect(screen.getAllByRole("article")).toHaveLength(1);
+    expect(screen.getByRole("heading", { name: "My dish 1" })).toBeInTheDocument();
+
+    await user.type(screen.getByRole("searchbox", { name: /Search your recipes/ }), "dish 7");
+    expect(screen.getAllByRole("button", { name: /^My dish \d+, \d+ min/ })).toHaveLength(1);
+  });
 });

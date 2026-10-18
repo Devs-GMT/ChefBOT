@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useId, useState, useSyncExternalStore } from "react";
 
 import { SectionTag } from "@/components/ui/section-tag";
 import {
@@ -25,6 +25,11 @@ export function ShoppingList() {
   const canShare = useSyncExternalStore(noSubscribe, browserCanShare, () => false);
 
   const text = formatShoppingList(items);
+  const open = items.filter((item) => !item.done);
+  const checked = items.filter((item) => item.done);
+  // Bought items fold away so a long list stays a short one.
+  const [showChecked, setShowChecked] = useState(false);
+  const checkedId = useId();
   const hasDone = items.some((item) => item.done);
 
   async function copy() {
@@ -74,25 +79,39 @@ export function ShoppingList() {
           </p>
         ) : (
           <>
-            <ul aria-label="Items to buy" className="grid gap-1 sm:grid-cols-2">
-              {items.map((item) => (
-                <li key={item.name}>
-                  <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl px-2 hover:bg-wheat">
-                    <input
-                      type="checkbox"
-                      checked={item.done}
-                      onChange={() => toggleShoppingItem(item.name)}
-                      className="size-5 accent-[var(--color-ink)]"
-                    />
-                    <span
-                      className={`text-[15px] ${item.done ? "text-brick line-through" : "text-ink"}`}
-                    >
-                      {shoppingLabel(item.name)}
-                    </span>
-                  </label>
-                </li>
-              ))}
-            </ul>
+            {open.length > 0 ? (
+              <ul aria-label="Items to buy" className="grid gap-1 sm:grid-cols-2">
+                {open.map((item) => (
+                  <ShoppingRow key={item.name} name={item.name} done={false} />
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm font-medium text-ink">All bought ✓</p>
+            )}
+
+            {checked.length > 0 && (
+              <div className="mt-4">
+                <button
+                  type="button"
+                  aria-expanded={showChecked}
+                  aria-controls={checkedId}
+                  onClick={() => setShowChecked((value) => !value)}
+                  className="flex min-h-11 items-center gap-2 rounded-full px-2 font-mono text-xs tracking-[0.06em] text-brick uppercase hover:text-ink"
+                >
+                  {checked.length} checked
+                  <span aria-hidden="true" className={`transition-transform ${showChecked ? "rotate-90" : ""}`}>
+                    ▸
+                  </span>
+                </button>
+                {showChecked && (
+                  <ul id={checkedId} aria-label="Checked items" className="grid gap-1 sm:grid-cols-2">
+                    {checked.map((item) => (
+                      <ShoppingRow key={item.name} name={item.name} done />
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
 
             <div className="mt-6 flex flex-wrap gap-2 border-t border-fog pt-5">
               <button type="button" onClick={copy} className={ACTION}>
@@ -131,5 +150,23 @@ export function ShoppingList() {
         )}
       </div>
     </section>
+  );
+}
+
+function ShoppingRow({ name, done }: { name: string; done: boolean }) {
+  return (
+    <li>
+      <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl px-2 hover:bg-wheat">
+        <input
+          type="checkbox"
+          checked={done}
+          onChange={() => toggleShoppingItem(name)}
+          className="size-5 accent-[var(--color-ink)]"
+        />
+        <span className={`text-[15px] ${done ? "text-brick line-through" : "text-ink"}`}>
+          {shoppingLabel(name)}
+        </span>
+      </label>
+    </li>
   );
 }
