@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useState, type ReactNode } from "react";
 
 import { CookButton } from "@/components/kitchen/cook-button";
 import { addShoppingItems, useShoppingList } from "@/lib/shopping-list";
@@ -9,6 +9,12 @@ import type { Recipe } from "@/shared/recipe-schema";
 export interface RecipeCardProps {
   recipe: Recipe;
   index: number;
+  /** Cards in the set, for the "01 / 03" counter (AI answers are always 3). */
+  total?: number;
+  /** Share the recipe to the stamp-proven archive after stamping (off for private recipes). */
+  archive?: boolean;
+  /** Extra controls under the stamp (e.g. Edit / Delete for own recipes). */
+  actions?: ReactNode;
 }
 
 /**
@@ -16,7 +22,7 @@ export interface RecipeCardProps {
  * from your fridge, missing items in red, numbered steps on demand, and the
  * on-chain stamp in its own column.
  */
-export function RecipeCard({ recipe, index }: RecipeCardProps) {
+export function RecipeCard({ recipe, index, total = 3, archive = true, actions }: RecipeCardProps) {
   const [open, setOpen] = useState(false);
   const shopping = useShoppingList();
   const onList =
@@ -34,7 +40,7 @@ export function RecipeCard({ recipe, index }: RecipeCardProps) {
     >
       <div className="relative flex items-center gap-4 bg-wheat p-4 lg:flex-col lg:items-start lg:p-6">
         <span className="font-mono text-xs tracking-[0.06em] text-ink tabular-nums">
-          {number} / 03
+          {number} / {String(total).padStart(2, "0")}
         </span>
         <span
           aria-hidden="true"
@@ -173,7 +179,8 @@ export function RecipeCard({ recipe, index }: RecipeCardProps) {
         <p className="mb-3 font-mono text-[11px] tracking-[0.06em] text-brick uppercase">
           Cooked it? Stamp it.
         </p>
-        <CookButton recipe={recipe} />
+        <CookButton recipe={recipe} archive={archive} />
+        {actions ? <div className="mt-4 flex flex-wrap gap-2">{actions}</div> : null}
       </div>
     </article>
   );

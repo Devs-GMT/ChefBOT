@@ -6,6 +6,7 @@ import { CookFlow } from "@/components/kitchen/cook-flow";
 import { Leaderboard } from "@/components/kitchen/leaderboard";
 import { MyKitchen } from "@/components/kitchen/my-kitchen";
 import { Reveal } from "@/components/ui/reveal";
+import { MyRecipes } from "@/components/kitchen/my-recipes";
 import { ShoppingList } from "@/components/kitchen/shopping-list";
 import { ScrollProgress } from "@/components/ui/scroll-progress";
 import { SiteFooter } from "@/components/ui/site-footer";
@@ -109,6 +110,7 @@ export default function AppPage() {
 
         <CookFlow />
         <ShoppingList />
+        <MyRecipes />
         <Leaderboard />
 
         <Reveal effect="up">

@@ -11,6 +11,7 @@ export function AppNav({ children }: { children?: ReactNode }) {
   const links = [
     { href: "#cook", label: "Cook" },
     { href: "#shopping-list", label: "List", badge: toBuy },
+    { href: "#my-recipes", label: "Mine" },
     { href: "#most-cooked", label: "Most Cooked" },
     { href: "#my-kitchen", label: "My Kitchen" },
   ];
