@@ -239,6 +239,29 @@ describe("Gemini proxy", () => {
     expect(JSON.parse(payload.contents[0].parts[0].text).ingredients).toEqual(["egg", "rice", "garlic"]);
   });
 
+  it("asks for an optional per-serving nutrition estimate and passes sane ones through", async () => {
+    const payload = structuredClone(VALID_AI_PAYLOAD) as {
+      recipes: Array<Record<string, unknown>>;
+    };
+    payload.recipes[0]!.nutrition = { kcal: 480, proteinG: 18 };
+    payload.recipes[1]!.nutrition = { kcal: 99999, proteinG: 18 };
+    const fetchMock = vi.fn().mockResolvedValue(geminiResponse(JSON.stringify(payload)));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await chefbotWorker.fetch(postRequest(VALID_REQUEST), makeEnv());
+    expect(response.status).toBe(200);
+    const { recipes } = await response.json();
+    expect(recipes[0].nutrition).toEqual({ kcal: 480, proteinG: 18 });
+    expect(recipes[1].nutrition).toBeUndefined();
+    expect(recipes[2].nutrition).toBeUndefined();
+
+    const sent = JSON.parse(fetchMock.mock.calls[0][1].body);
+    const item = sent.generationConfig.responseSchema.properties.recipes.items;
+    expect(item.properties.nutrition.properties.kcal.type).toBe("INTEGER");
+    expect(item.required).not.toContain("nutrition");
+    expect(sent.systemInstruction.parts[0].text).toContain("nutrition");
+  });
+
   it("uses GEMINI_MODEL and GEMINI_THINKING_LEVEL when configured", async () => {
     const fetchMock = vi.fn().mockResolvedValue(geminiResponse(JSON.stringify(VALID_AI_PAYLOAD)));
     vi.stubGlobal("fetch", fetchMock);

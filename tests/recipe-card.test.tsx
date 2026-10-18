@@ -61,3 +61,18 @@ describe("RecipeCard", () => {
     expect(screen.getByText(/Nothing missing/)).toBeInTheDocument();
   });
 });
+
+describe("RecipeCard — nutrition estimate (v1.1)", () => {
+  it("shows the AI estimate with a disclaimer", () => {
+    renderWithProviders(
+      <RecipeCard recipe={{ ...RECIPE, nutrition: { kcal: 450, proteinG: 20 } }} index={0} />,
+    );
+    expect(screen.getByText("≈ 450 kcal · 20 g protein")).toBeInTheDocument();
+    expect(screen.getByText(/AI estimate per serving/)).toBeInTheDocument();
+  });
+
+  it("shows nothing when there is no estimate", () => {
+    renderWithProviders(<RecipeCard recipe={RECIPE} index={0} />);
+    expect(screen.queryByText(/kcal/)).not.toBeInTheDocument();
+  });
+});

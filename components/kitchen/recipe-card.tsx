@@ -113,6 +113,15 @@ export function RecipeCard({ recipe, index }: RecipeCardProps) {
           </p>
         )}
 
+        {recipe.nutrition && (
+          <p className="mt-3 text-xs text-brick">
+            <span className="font-medium text-ink">
+              ≈ {recipe.nutrition.kcal} kcal · {recipe.nutrition.proteinG} g protein
+            </span>{" "}
+            <span>· AI estimate per serving, not medical advice</span>
+          </p>
+        )}
+
         <button
           type="button"
           onClick={() => setOpen((value) => !value)}

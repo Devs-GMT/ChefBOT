@@ -24,6 +24,15 @@ export const MAX_INGREDIENT_LENGTH = 40;
 export const MAX_STEP_LENGTH = 300;
 export const ALLOWED_MAX_MINUTES = [10, 20, 30] as const;
 
+export const NUTRITION_KCAL_RANGE = [50, 2000] as const;
+export const NUTRITION_PROTEIN_RANGE = [0, 150] as const;
+
+/** v1.1: rough per-serving AI estimate — display only, never medical data. */
+export interface NutritionEstimate {
+  kcal: number;
+  proteinG: number;
+}
+
 export interface Recipe {
   title: string;
   emoji: string;
@@ -31,6 +40,7 @@ export interface Recipe {
   uses: string[];
   missing: string[];
   steps: string[];
+  nutrition?: NutritionEstimate;
 }
 
 export interface RecipesResponse {
@@ -185,6 +195,18 @@ export function validateRecipesRequest(
  * structure, types, lengths, byte caps, step counts, and duplicate
  * titles are all checked before anything reaches the UI.
  */
+function inRange(value: unknown, [min, max]: readonly [number, number]): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= min && value <= max;
+}
+
+/** Optional field: anything malformed is dropped, the recipe itself stays. */
+function parseNutrition(raw: unknown): NutritionEstimate | undefined {
+  if (!isPlainObject(raw)) return undefined;
+  if (!inRange(raw.kcal, NUTRITION_KCAL_RANGE)) return undefined;
+  if (!inRange(raw.proteinG, NUTRITION_PROTEIN_RANGE)) return undefined;
+  return { kcal: raw.kcal, proteinG: raw.proteinG };
+}
+
 export function validateRecipesResponse(
   data: unknown,
   opts: { maxMinutes?: number; selected?: readonly string[] } = {},
@@ -289,6 +311,8 @@ export function validateRecipesResponse(
       missing: missingResult.value,
       steps: stepsResult.value,
     });
+    const nutrition = parseNutrition(raw.nutrition);
+    if (nutrition) recipes[recipes.length - 1]!.nutrition = nutrition;
   }
 
   return { ok: true, value: { recipes } };

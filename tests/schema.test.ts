@@ -273,3 +273,35 @@ describe("shared ingredient vocabulary", () => {
     expect(isKnownIngredient("caviar")).toBe(false);
   });
 });
+
+describe("validateRecipesResponse — optional nutrition estimate (v1.1)", () => {
+  it("keeps a sane per-serving estimate", () => {
+    const result = validateRecipesResponse(
+      validRecipes([{ nutrition: { kcal: 520, proteinG: 22 } }]),
+    );
+    expect(result.ok && result.value.recipes[0]?.nutrition).toEqual({ kcal: 520, proteinG: 22 });
+  });
+
+  it("stays valid without nutrition and omits the key", () => {
+    const result = validateRecipesResponse(validRecipes());
+    expect(result.ok && "nutrition" in result.value.recipes[0]!).toBe(false);
+  });
+
+  it.each([
+    ["kcal too low", { kcal: 10, proteinG: 5 }],
+    ["kcal too high", { kcal: 9000, proteinG: 5 }],
+    ["protein negative", { kcal: 400, proteinG: -1 }],
+    ["protein too high", { kcal: 400, proteinG: 400 }],
+    ["not integers", { kcal: 400.5, proteinG: 20 }],
+    ["wrong types", { kcal: "400", proteinG: 20 }],
+    ["not an object", "lots"],
+    ["array", [400, 20]],
+  ])("drops only the nutrition field when it is invalid (%s)", (_label, nutrition) => {
+    const result = validateRecipesResponse(validRecipes([{ nutrition }]));
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.recipes[0]?.nutrition).toBeUndefined();
+      expect(result.value.recipes[0]?.title).toBe("Garlic Egg Fried Rice");
+    }
+  });
+});

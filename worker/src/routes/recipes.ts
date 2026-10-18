@@ -32,9 +32,17 @@ const RECIPES_SCHEMA = {
           uses: { type: "ARRAY", items: { type: "STRING" } },
           missing: { type: "ARRAY", items: { type: "STRING" } },
           steps: { type: "ARRAY", items: { type: "STRING" }, minItems: 1, maxItems: 8 },
+          nutrition: {
+            type: "OBJECT",
+            properties: {
+              kcal: { type: "INTEGER" },
+              proteinG: { type: "INTEGER" },
+            },
+            required: ["kcal", "proteinG"],
+          },
         },
         required: ["title", "emoji", "minutes", "uses", "missing", "steps"],
-        propertyOrdering: ["title", "emoji", "minutes", "uses", "missing", "steps"],
+        propertyOrdering: ["title", "emoji", "minutes", "uses", "missing", "steps", "nutrition"],
       },
     },
   },
@@ -50,6 +58,7 @@ function systemPrompt(request: RecipeRequest): string {
     "uses: the selected ingredient ids the recipe actually uses (lowercase, from the user's list only);",
     "missing: at most 4 pantry/fresh items the cook could add but can live without (lowercase);",
     "steps: 1 to 8 short imperative sentences a home cook follows in order (max 300 chars each);",
+    "nutrition: a rough per-serving estimate as integers, kcal (50-2000) and proteinG (0-150);",
     "Recipes must be realistic, tested-style home cooking with common techniques.",
     request.vegetarian
       ? "Recipes MUST be strictly vegetarian (no meat, fish, poultry, or seafood)."
