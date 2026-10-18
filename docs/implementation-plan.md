@@ -233,3 +233,17 @@ npm run build       # next build
     - no overflow;
     - the only console error was the local Worker being off (fallback recipes).
   - **Gate:** tsc ×2, eslint, 385 Vitest, 17 Hardhat, `next build`.
+- 2026-10-18: **Website live on Vercel (testnet 968): https://chef-bot-kappa.vercel.app.**
+  - **First build failed:** type errors in `test/ChefBOT.ts`. Hardhat's generated `artifacts/artifacts.d.ts` is git-ignored, so a fresh clone has no contract types. Fixed in b527f8f: Hardhat files moved out of the Next tsconfig and into `tsconfig.contracts.json`; `npm run typecheck` = `next typegen` + both checks. On a fresh clone: old config 32 errors, new 0.
+  - **Worker** CORS now allows the Vercel origin (version `cb07b596`):
+    - preflight 204 + ACAO for `https://chef-bot-kappa.vercel.app`;
+    - foreign origin 403;
+    - `/recipes` 200 in 3.6 s.
+  - **Live browser check** (Edge, 390 + 1440, no mocks):
+    - landing renders with no overflow;
+    - `/app` egg + rice → "Fresh from ChefBOT AI" in 3.5 s with nutrition on all 3 cards;
+    - scan of the pantry photo → "Found 6" (tomato, onion, potato, cucumber, apple, garlic);
+    - `/app/list`, `/app/recipes`, `/app/leaderboard`, `/app/kitchen` each render their h1; the leaderboard reads 16 real dishes from the testnet contract;
+    - 0 console errors.
+  - **XL note:** system DNS still resolves `*.workers.dev` to the XL block page. Edge got through via its Secure DNS (DoH), so browsers without DoH (for example some phone or in-app browsers) on XL will get the house favourites fallback until the Worker moves to a custom domain.
+  - **Still open:** the owner's phone stamp on the public URL, and mainnet (needs "approve mainnet").
