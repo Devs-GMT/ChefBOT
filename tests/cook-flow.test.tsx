@@ -190,4 +190,26 @@ describe("CookFlow", () => {
       { exclude: [] },
     ]);
   });
+
+  it("keeps picks and recipes when the page is left and opened again", async () => {
+    const user = userEvent.setup();
+    vi.mocked(getRecipes).mockResolvedValue(AI_RESULT);
+    const first = renderWithProviders(<CookFlow />);
+    await user.click(screen.getByRole("button", { name: "Egg" }));
+    await user.click(screen.getByRole("tab", { name: /Grains/ }));
+    await user.click(screen.getByRole("button", { name: "Rice" }));
+    await user.click(screen.getByRole("radio", { name: "10 min" }));
+    await user.click(screen.getByRole("button", { name: "Cook something →" }));
+    await screen.findByRole("heading", { name: /Garlic Egg Fried Rice/ });
+    first.unmount();
+
+    renderWithProviders(<CookFlow />);
+    expect(screen.getByRole("heading", { name: /Garlic Egg Fried Rice/ })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "10 min" })).toBeChecked();
+    expect(screen.getByRole("button", { name: "Remove Egg" })).toBeInTheDocument();
+
+    // The same picks again count as "New ideas" (round 1), as before leaving.
+    await user.click(screen.getByRole("button", { name: /New ideas/ }));
+    expect(vi.mocked(getRecipes).mock.calls.at(-1)![0].variation).toBe(1);
+  });
 });

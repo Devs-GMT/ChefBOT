@@ -7,6 +7,7 @@ import { IngredientPicker, ingredientEmoji } from "@/components/kitchen/ingredie
 import { RecipeCard, RecipeCardSkeleton } from "@/components/kitchen/recipe-card";
 import { SectionTag } from "@/components/ui/section-tag";
 import { INGREDIENT_GROUPS } from "@/lib/ingredients";
+import { readCookSession, saveCookSession } from "@/lib/cook-session";
 import { getRecipes, type RecipeResult } from "@/lib/recipes";
 import { MAX_INGREDIENTS, MAX_VARIATION, type RecipeRequest } from "@/shared/recipe-schema";
 
@@ -22,26 +23,34 @@ const LABELS = new Map(
 );
 
 export function CookFlow() {
-  const [selected, setSelected] = useState<string[]>([]);
-  const [maxMinutes, setMaxMinutes] = useState<number>(20);
-  const [vegetarian, setVegetarian] = useState(false);
-  const [phase, setPhase] = useState<"idle" | "loading" | "done">("idle");
-  const [result, setResult] = useState<RecipeResult | null>(null);
+  // Coming back from another kitchen page restores the last picks and recipes.
+  const [restored] = useState(readCookSession);
+  const [selected, setSelected] = useState<string[]>(restored.selected);
+  const [maxMinutes, setMaxMinutes] = useState<number>(restored.maxMinutes);
+  const [vegetarian, setVegetarian] = useState(restored.vegetarian);
+  const [phase, setPhase] = useState<"idle" | "loading" | "done">(restored.result ? "done" : "idle");
+  const [result, setResult] = useState<RecipeResult | null>(restored.result);
   const resultsRef = useRef<HTMLDivElement>(null);
-  const historyRef = useRef<{ key: string; round: number; seen: string[] }>({
-    key: "",
-    round: 0,
-    seen: [],
-  });
+  const historyRef = useRef({ ...restored.history, seen: [...restored.history.seen] });
+  const skipScrollRef = useRef(restored.result !== null);
 
   const canSubmit = selected.length >= 2 && phase !== "loading";
 
-  // Bring the answer into view once it lands (an external DOM effect).
+  // Bring the answer into view once it lands (an external DOM effect), but
+  // not when the page opens with restored results.
   useEffect(() => {
+    if (skipScrollRef.current) {
+      skipScrollRef.current = false;
+      return;
+    }
     if (phase === "loading" || phase === "done") {
       resultsRef.current?.scrollIntoView?.({ behavior: "smooth", block: "start" });
     }
   }, [phase]);
+
+  useEffect(() => {
+    saveCookSession({ selected, maxMinutes, vegetarian });
+  }, [selected, maxMinutes, vegetarian]);
 
   function toggleIngredient(id: string) {
     setSelected((current) =>
@@ -78,6 +87,8 @@ export function CookFlow() {
     if (variation > 0) request.variation = variation;
     const next = await getRecipes(request, { exclude: [...seen] });
     historyRef.current.seen = [...seen, ...next.recipes.map((r) => r.title)].slice(-MAX_SEEN);
+    // Saved here too, so recipes that land after the cook left the page wait for them.
+    saveCookSession({ result: next, history: { ...historyRef.current } });
     setResult(next);
     setPhase("done");
   }
