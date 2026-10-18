@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 
 import { CookButton } from "@/components/kitchen/cook-button";
+import { addShoppingItems, useShoppingList } from "@/lib/shopping-list";
 import type { Recipe } from "@/shared/recipe-schema";
 
 export interface RecipeCardProps {
@@ -17,6 +18,12 @@ export interface RecipeCardProps {
  */
 export function RecipeCard({ recipe, index }: RecipeCardProps) {
   const [open, setOpen] = useState(false);
+  const shopping = useShoppingList();
+  const onList =
+    recipe.missing.length > 0 &&
+    recipe.missing.every((item) =>
+      shopping.some((entry) => !entry.done && entry.name === item.trim().toLowerCase()),
+    );
   const stepsId = useId();
   const number = String(index + 1).padStart(2, "0");
 
@@ -90,6 +97,15 @@ export function RecipeCard({ recipe, index }: RecipeCardProps) {
                 </li>
               ))}
             </ul>
+            <button
+              type="button"
+              onClick={() => addShoppingItems(recipe.missing)}
+              disabled={onList}
+              aria-label={onList ? "On your list ✓" : "Add missing to shopping list"}
+              className="inline-flex min-h-9 items-center rounded-full border border-ink/20 px-3 text-xs font-medium text-ink transition-colors hover:border-ink/50 disabled:border-transparent disabled:text-brick"
+            >
+              {onList ? "On your list ✓" : "+ Shopping list"}
+            </button>
           </div>
         ) : (
           <p className="mt-3 text-xs font-medium text-ink">

@@ -6,6 +6,7 @@ const LINKS = [
   { href: "#cook", label: "Cook" },
   { href: "#most-cooked", label: "Most Cooked" },
   { href: "#my-kitchen", label: "My Kitchen" },
+  { href: "#shopping-list", label: "List" },
 ];
 
 export function AppNav({ children }: { children?: ReactNode }) {
