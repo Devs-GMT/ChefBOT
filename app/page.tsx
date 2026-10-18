@@ -1,5 +1,6 @@
 import { LandingFaq } from "@/components/landing/faq";
 import { LandingFeatures } from "@/components/landing/features";
+import { LandingFoodGallery } from "@/components/landing/food-gallery";
 import { LandingFoodGroups } from "@/components/landing/food-groups";
 import { LandingHero } from "@/components/landing/hero";
 import { LandingHow } from "@/components/landing/how-it-works";
@@ -22,6 +23,7 @@ export default function Home() {
           <LandingHero />
           <LandingStats />
           <LandingFoodGroups />
+          <LandingFoodGallery />
           <LandingManifesto />
           <LandingHow />
           <LandingFeatures />
