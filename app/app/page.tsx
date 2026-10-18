@@ -108,12 +108,12 @@ export default function AppPage() {
         </section>
 
         <CookFlow />
+        <ShoppingList />
         <Leaderboard />
 
         <Reveal effect="up">
           <MyKitchen />
         </Reveal>
-        <ShoppingList />
       </main>
       <SiteFooter />
     </div>

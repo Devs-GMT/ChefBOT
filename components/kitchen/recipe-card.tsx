@@ -106,6 +106,14 @@ export function RecipeCard({ recipe, index }: RecipeCardProps) {
             >
               {onList ? "On your list ✓" : "+ Shopping list"}
             </button>
+            {onList && (
+              <a
+                href="#shopping-list"
+                className="text-xs font-medium text-ink underline underline-offset-2"
+              >
+                View list
+              </a>
+            )}
           </div>
         ) : (
           <p className="mt-3 text-xs font-medium text-ink">

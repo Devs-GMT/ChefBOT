@@ -2,6 +2,7 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { AppNav } from "@/components/kitchen/app-nav";
 import { RecipeCard } from "@/components/kitchen/recipe-card";
 import { ShoppingList } from "@/components/kitchen/shopping-list";
 import { clearShoppingList, getShoppingList } from "@/lib/shopping-list";
@@ -36,6 +37,26 @@ describe("Add to shopping list (recipe card)", () => {
 
     expect(getShoppingList().map((i) => i.name)).toEqual(["garlic", "fish sauce"]);
     expect(screen.getByRole("button", { name: /On your list/ })).toBeDisabled();
+    expect(screen.getByRole("link", { name: "View list" })).toHaveAttribute("href", "#shopping-list");
+  });
+
+  it("shows the list size in the nav, right after Cook", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(
+      <>
+        <AppNav />
+        <RecipeCard recipe={RECIPE} index={0} />
+      </>,
+    );
+    const nav = screen.getByRole("navigation", { name: "ChefBOT app" });
+    const labels = within(nav).getAllByRole("link").map((link) => link.textContent);
+    expect(labels.slice(1, 3)).toEqual(["Cook", "List"]);
+
+    await user.click(screen.getByRole("button", { name: "Add missing to shopping list" }));
+    expect(within(nav).getByRole("link", { name: "List, 2 items" })).toHaveAttribute(
+      "href",
+      "#shopping-list",
+    );
   });
 
   it("has no add button when nothing is missing", () => {

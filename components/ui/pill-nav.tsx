@@ -6,6 +6,28 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 export interface PillNavLink {
   href: string;
   label: string;
+  /** Small count chip after the label (hidden when 0 or absent). */
+  badge?: number;
+}
+
+function LinkContent({ link }: { link: PillNavLink }) {
+  return (
+    <>
+      {link.label}
+      {link.badge ? (
+        <span
+          aria-hidden="true"
+          className="ml-1.5 flex size-5 items-center justify-center rounded-full bg-alert font-mono text-[11px] text-white tabular-nums"
+        >
+          {link.badge}
+        </span>
+      ) : null}
+    </>
+  );
+}
+
+function linkName(link: PillNavLink): string | undefined {
+  return link.badge ? `${link.label}, ${link.badge} item${link.badge === 1 ? "" : "s"}` : undefined;
 }
 
 export interface PillNavProps {
@@ -64,9 +86,10 @@ export function PillNav({ label, homeHref, links, action, className = "" }: Pill
               <a
                 key={link.href}
                 href={link.href}
+                aria-label={linkName(link)}
                 className="flex min-h-11 items-center rounded-full px-3.5 text-sm font-medium text-parchment/75 transition-colors hover:bg-parchment/10 hover:text-parchment"
               >
-                {link.label}
+                <LinkContent link={link} />
               </a>
             ))}
           </div>
@@ -96,10 +119,11 @@ export function PillNav({ label, homeHref, links, action, className = "" }: Pill
                 <li key={link.href}>
                   <a
                     href={link.href}
+                    aria-label={linkName(link)}
                     onClick={() => setOpen(false)}
                     className="flex min-h-12 items-center rounded-2xl px-4 text-[17px] font-medium text-parchment transition-colors hover:bg-parchment/10"
                   >
-                    {link.label}
+                    <LinkContent link={link} />
                   </a>
                 </li>
               ))}
