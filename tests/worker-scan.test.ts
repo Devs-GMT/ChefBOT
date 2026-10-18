@@ -190,6 +190,22 @@ describe("POST /scan", () => {
     expect((await invalid.json()).error.code).toBe("ai_invalid");
   });
 
+  it("says why the AI failed (status class only, never the provider body)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response('{"error":{"message":"secret-ish detail test-key"}}', { status: 400 })),
+    );
+    const upstream = await chefbotWorker.fetch(scanRequest({ image: JPEG, mime: "image/jpeg" }), makeEnv());
+    const body = await upstream.json();
+    expect(upstream.status).toBe(502);
+    expect(body.error.reason).toBe("upstream_400");
+    expect(JSON.stringify(body)).not.toMatch(/secret-ish|test-key/);
+
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(gemini("{}", "SAFETY")));
+    const blocked = await chefbotWorker.fetch(scanRequest({ image: JPEG, mime: "image/jpeg" }), makeEnv());
+    expect((await blocked.json()).error.reason).toBe("blocked");
+  });
+
   it("shares the per-IP hourly budget", async () => {
     vi.stubGlobal("fetch", vi.fn().mockImplementation(async () => gemini(JSON.stringify({ ingredients: [] }))));
     const env = makeEnv({ RATE_LIMIT_PER_HOUR: "1" });

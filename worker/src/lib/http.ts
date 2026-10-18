@@ -13,6 +13,7 @@ export function errorResponse(
   code: string,
   message: string,
   headers: HeaderMap = {},
+  reason?: string,
 ): Response {
-  return json(status, { error: { code, message } }, headers);
+  return json(status, { error: reason ? { code, message, reason } : { code, message } }, headers);
 }

@@ -13,7 +13,7 @@ import {
   validateScanResponse,
 } from "../../../shared/scan-schema";
 import type { WorkerEnv } from "../env";
-import { callGemini, DEFAULT_GEMINI_MODEL } from "../lib/gemini";
+import { callGemini, DEFAULT_GEMINI_MODEL, failureTag } from "../lib/gemini";
 import { errorResponse, json, type HeaderMap } from "../lib/http";
 
 /** Vision needs a little longer than text; the client waits 12 s. */
@@ -84,7 +84,7 @@ export async function handleScan(
     if (outcome.reason === "timeout") {
       return errorResponse(504, "ai_timeout", "Scan timed out.", headers);
     }
-    return errorResponse(502, "ai_error", "Scan failed.", headers);
+    return errorResponse(502, "ai_error", "Scan failed.", headers, failureTag(outcome));
   }
 
   const result = validateScanResponse(outcome.data);

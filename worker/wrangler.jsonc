@@ -30,6 +30,10 @@
   // Recipe archive. No id: `wrangler deploy` provisions the namespace on
   // first deploy; `wrangler dev` uses a local one.
   "kv_namespaces": [{ "binding": "DISHES" }],
+  // Run next to the Gemini API: from some Cloudflare edges Google answers
+  // HTTP 400 (location not supported) — seen live as intermittent /scan
+  // failures. Pinning placement gives a supported, consistent egress.
+  "placement": { "mode": "targeted", "hostname": "generativelanguage.googleapis.com" },
   "observability": {
     "enabled": true
   }

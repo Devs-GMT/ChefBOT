@@ -48,7 +48,17 @@ export interface GeminiCall {
 
 export type GeminiOutcome =
   | { ok: true; data: unknown }
-  | { ok: false; reason: "timeout" | "upstream" | "blocked" | "no_content" | "not_json" };
+  | {
+      ok: false;
+      reason: "timeout" | "upstream" | "blocked" | "no_content" | "not_json";
+      /** Provider HTTP status when reason is "upstream" (status only, never the body). */
+      status?: number;
+    };
+
+/** Short, non-sensitive failure tag for error responses, e.g. "upstream_429". */
+export function failureTag(outcome: { reason: string; status?: number }): string {
+  return outcome.status ? `${outcome.reason}_${outcome.status}` : outcome.reason;
+}
 
 interface GeminiPart {
   text?: unknown;
@@ -97,7 +107,7 @@ export async function callGemini(
     if (!response.ok) {
       // Status only (429 = free-tier quota) — never the body, URL or key.
       console.warn(`gemini upstream HTTP ${response.status} (${call.model})`);
-      return { ok: false, reason: "upstream" };
+      return { ok: false, reason: "upstream", status: response.status };
     }
 
     const body = (await response.json()) as GeminiBody;

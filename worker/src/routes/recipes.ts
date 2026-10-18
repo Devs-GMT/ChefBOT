@@ -10,7 +10,7 @@ import {
   type RecipeRequest,
 } from "../../../shared/recipe-schema";
 import type { WorkerEnv } from "../env";
-import { callGemini, DEFAULT_GEMINI_MODEL } from "../lib/gemini";
+import { callGemini, DEFAULT_GEMINI_MODEL, failureTag } from "../lib/gemini";
 import { errorResponse, json, type HeaderMap } from "../lib/http";
 
 export const MAX_BODY_BYTES = 4096;
@@ -112,7 +112,7 @@ export async function handleRecipes(
     if (outcome.reason === "timeout") {
       return errorResponse(504, "ai_timeout", "Recipe generation timed out.", headers);
     }
-    return errorResponse(502, "ai_error", "Recipe generation failed.", headers);
+    return errorResponse(502, "ai_error", "Recipe generation failed.", headers, failureTag(outcome));
   }
 
   const recipes = validateRecipesResponse(outcome.data, {
