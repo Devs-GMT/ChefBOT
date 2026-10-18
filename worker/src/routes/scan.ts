@@ -71,8 +71,8 @@ export async function handleScan(
 
   const outcome = await callGemini({
     apiKey: env.GEMINI_API_KEY,
-    model: env.GEMINI_MODEL?.trim() || DEFAULT_GEMINI_MODEL,
-    thinkingLevel: env.GEMINI_THINKING_LEVEL?.trim() || undefined,
+    model: env.GEMINI_SCAN_MODEL?.trim() || env.GEMINI_MODEL?.trim() || DEFAULT_GEMINI_MODEL,
+    thinkingLevel: env.GEMINI_SCAN_THINKING_LEVEL?.trim() || undefined,
     system: SYSTEM,
     user: "Which of the allowed ingredients are visible in this photo?",
     image: { mimeType: validated.value.mime, data: validated.value.image },

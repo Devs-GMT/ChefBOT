@@ -95,6 +95,8 @@ export async function callGemini(
       signal: controller.signal,
     });
     if (!response.ok) {
+      // Status only (429 = free-tier quota) — never the body, URL or key.
+      console.warn(`gemini upstream HTTP ${response.status} (${call.model})`);
       return { ok: false, reason: "upstream" };
     }
 

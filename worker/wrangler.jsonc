@@ -13,6 +13,9 @@
     "RATE_LIMIT_PER_HOUR": "20",
     "GEMINI_MODEL": "gemini-3.5-flash-lite"
     // Optional: "GEMINI_THINKING_LEVEL": "minimal" (verify against the live API first).
+    // Optional: "GEMINI_SCAN_MODEL" / "GEMINI_SCAN_THINKING_LEVEL" for POST /scan only.
+    // Measured 2026-10-18 (npm run eval:scan): gemini-3.5-flash on the free tier hit
+    // 429/503/504 on most calls and was no more accurate, so scans stay on GEMINI_MODEL.
     // Secret (never in this file): wrangler secret put GEMINI_API_KEY
   },
   // Per-IP hourly limiter: one SQLite-backed Durable Object per client IP.

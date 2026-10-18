@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { WorkerEnv } from "@/worker/src/env";
 import chefbotWorker from "@/worker/src/index";
+import { geminiUrl } from "@/worker/src/lib/gemini";
 import { resetRateLimiter } from "@/worker/src/lib/rate-limit";
 import { ALL_INGREDIENT_IDS } from "@/shared/ingredients";
 import {
@@ -126,6 +127,23 @@ describe("POST /scan", () => {
     expect(typeof parts[1].text).toBe("string");
     const schema = sent.generationConfig.responseSchema.properties.ingredients;
     expect(schema.items.enum).toEqual(ALL_INGREDIENT_IDS);
+  });
+
+  it("uses GEMINI_SCAN_MODEL for scans, falling back to GEMINI_MODEL", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockImplementation(async () => gemini(JSON.stringify({ ingredients: ["egg"] })));
+    vi.stubGlobal("fetch", fetchMock);
+    await chefbotWorker.fetch(
+      scanRequest({ image: JPEG, mime: "image/jpeg" }),
+      makeEnv({ GEMINI_MODEL: "text-model", GEMINI_SCAN_MODEL: "vision-model" }),
+    );
+    await chefbotWorker.fetch(
+      scanRequest({ image: JPEG, mime: "image/jpeg" }),
+      makeEnv({ GEMINI_MODEL: "text-model" }),
+    );
+    expect(fetchMock.mock.calls[0][0]).toBe(geminiUrl("vision-model"));
+    expect(fetchMock.mock.calls[1][0]).toBe(geminiUrl("text-model"));
   });
 
   it("never echoes the key or the photo back", async () => {

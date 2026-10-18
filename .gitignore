@@ -51,3 +51,6 @@ artifacts/
 coverage/
 test-results/
 cache/
+
+# Private photos for npm run eval:scan
+worker/eval-photos/

@@ -13,6 +13,10 @@ export interface WorkerEnv {
   GEMINI_MODEL?: string;
   /** Optional thinkingConfig.thinkingLevel (e.g. "minimal"); unset = model default. */
   GEMINI_THINKING_LEVEL?: string;
+  /** Model for POST /scan (vision); unset = GEMINI_MODEL. */
+  GEMINI_SCAN_MODEL?: string;
+  /** Optional thinkingLevel for POST /scan only; unset = model default. */
+  GEMINI_SCAN_THINKING_LEVEL?: string;
   /** Comma-separated exact origins allowed by CORS. */
   CORS_ALLOWED_ORIGINS?: string;
   /** AI requests allowed per IP per hour (default 20). */
