@@ -57,12 +57,27 @@ npm run dev                     # http://localhost:3000 (landing), /app (kitchen
 cd worker && npm install && npx wrangler dev   # http://127.0.0.1:8787
 ```
 
+### Test on your phone (same Wi-Fi)
+
+Plain `npm run dev` only serves its dev scripts to `localhost`, so a phone opening
+`http://<laptop-ip>:3000` sees the page but cannot tap anything. Stop it, then:
+
+```bash
+npm run dev:lan        # prints http://<laptop-ip>:3000/app — open that on the phone
+```
+
+It starts the Worker on all interfaces with CORS for the LAN origin (via `--var`,
+`worker/.dev.vars` untouched) and `next dev -H 0.0.0.0` with that IP allowed
+(`allowedDevOrigins`) and the recipe API pointed at the laptop. Dev only. Allow Node
+through Windows Firewall on private networks if asked. Plain http on a LAN is not a
+secure context, so Copy/Share in the shopping list may fall back to a message there.
+
 ### Scripts
 
 ```bash
 npm run lint            # ESLint
 npm run typecheck       # tsc --noEmit
-npm test                # vitest (104 tests incl. e2e through the real Worker handler)
+npm test                # vitest (incl. e2e through the real Worker handler)
 npm run test:contract   # Hardhat (16 tests)
 npm run build           # production build
 npm run abi:export      # regenerate lib/abi/ChefBOT.ts from the contract

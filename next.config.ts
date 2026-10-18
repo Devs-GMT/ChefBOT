@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
+// `npm run dev:lan` sets this so a phone on the same Wi-Fi can load dev
+// assets (Next blocks other origins in dev). Ignored by production builds.
+const lanHost = process.env.CHEFBOT_LAN_HOST?.trim();
+
 const nextConfig: NextConfig = {
+  allowedDevOrigins: lanHost ? [lanHost] : [],
   images: {
     remotePatterns: [
       {
