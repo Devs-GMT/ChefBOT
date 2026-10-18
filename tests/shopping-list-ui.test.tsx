@@ -40,23 +40,10 @@ describe("Add to shopping list (recipe card)", () => {
     expect(screen.getByRole("link", { name: "View list" })).toHaveAttribute("href", "#shopping-list");
   });
 
-  it("shows the list size in the nav, right after Cook", async () => {
-    const user = userEvent.setup();
-    renderWithProviders(
-      <>
-        <AppNav />
-        <RecipeCard recipe={RECIPE} index={0} />
-      </>,
-    );
+  it("points the app pill nav home (the workspace tabs carry the list count)", () => {
+    renderWithProviders(<AppNav />);
     const nav = screen.getByRole("navigation", { name: "ChefBOT app" });
-    const labels = within(nav).getAllByRole("link").map((link) => link.textContent);
-    expect(labels.slice(1, 3)).toEqual(["Cook", "List"]);
-
-    await user.click(screen.getByRole("button", { name: "Add missing to shopping list" }));
-    expect(within(nav).getByRole("link", { name: "List, 2 items" })).toHaveAttribute(
-      "href",
-      "#shopping-list",
-    );
+    expect(within(nav).getByRole("link", { name: "Home" })).toHaveAttribute("href", "/");
   });
 
   it("has no add button when nothing is missing", () => {

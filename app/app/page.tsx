@@ -3,6 +3,7 @@ import Image from "next/image";
 
 import { AppNav } from "@/components/kitchen/app-nav";
 import { CookFlow } from "@/components/kitchen/cook-flow";
+import { KitchenTabs } from "@/components/kitchen/kitchen-tabs";
 import { Leaderboard } from "@/components/kitchen/leaderboard";
 import { MyKitchen } from "@/components/kitchen/my-kitchen";
 import { Reveal } from "@/components/ui/reveal";
@@ -22,12 +23,6 @@ export const metadata: Metadata = {
     "Pick your ingredients, get three recipes, and stamp every dish you cook on BOT Chain.",
 };
 
-const STEPS = [
-  { href: "#cook", number: "01", label: "Pick your fridge" },
-  { href: "#cook", number: "02", label: "Get 3 recipes" },
-  { href: "#most-cooked", number: "03", label: "Stamp on BOT Chain" },
-];
-
 const STRIP = [
   { src: ramen, alt: "A bowl of ramen with a soft egg and spring onion." },
   { src: poke, alt: "A salmon poke bowl with avocado and edamame." },
@@ -42,41 +37,35 @@ export default function AppPage() {
         <WalletButton tone="dark" />
       </AppNav>
       <main className="flex-1">
-        <section className="mx-auto w-full max-w-6xl px-4 pt-10 sm:px-6 lg:pt-14">
-          <div className="grid items-end gap-8 lg:grid-cols-[1.15fr_1fr]">
+        <section className="mx-auto w-full max-w-6xl px-4 pt-8 pb-6 sm:px-6 lg:pt-12">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="font-mono text-xs tracking-[0.06em] text-brick uppercase">
                 The kitchen · no signup
               </p>
-              <h1 className="mt-4 text-[clamp(3rem,9vw,128px)] leading-[0.84] font-bold tracking-[-0.04em] text-ink">
-                <StaggerText as="span" text="Pick." className="block" />
-                <StaggerText as="span" text="Cook." className="block" startDelayMs={120} />
-                <StaggerText
-                  as="span"
-                  text="Stamp."
-                  className="block text-alert"
-                  startDelayMs={240}
-                />
+              <h1 className="mt-3 text-[clamp(2.75rem,7vw,96px)] leading-[0.86] font-bold tracking-[-0.04em] text-ink">
+                <StaggerText as="span" text="Pick. Cook." />{" "}
+                <StaggerText as="span" text="Stamp." className="text-alert" startDelayMs={160} />
               </h1>
             </div>
-            <Reveal effect="up" delay={200}>
-              <p className="max-w-md text-[19px] leading-[1.3] tracking-[-0.02em] text-ink">
-                Everything below works without a wallet. Add MetaMask only when
-                you want a dish written into your on-chain kitchen.
+            <Reveal effect="up" delay={200} className="flex items-end gap-5">
+              <p className="max-w-xs text-[17px] leading-[1.3] tracking-[-0.02em] text-ink">
+                Works without a wallet. Add MetaMask only to stamp a dish into
+                your on-chain kitchen.
               </p>
-              <div className="mt-6 grid grid-cols-3 gap-2">
+              <div className="hidden shrink-0 gap-2 sm:flex">
                 {STRIP.map((photo, index) => (
                   <div
                     key={photo.alt}
-                    className={`relative aspect-[3/4] overflow-hidden rounded-2xl bg-wheat ${
-                      index === 1 ? "translate-y-4" : ""
+                    className={`relative aspect-[3/4] w-16 overflow-hidden rounded-xl bg-wheat lg:w-20 ${
+                      index === 1 ? "-translate-y-2" : ""
                     }`}
                   >
                     <Image
                       src={photo.src}
                       alt={photo.alt}
                       placeholder="blur"
-                      sizes="(min-width: 1024px) 160px, 30vw"
+                      sizes="80px"
                       className="h-full w-full object-cover"
                       priority={index === 0}
                     />
@@ -85,37 +74,17 @@ export default function AppPage() {
               </div>
             </Reveal>
           </div>
-
-          <ol className="mt-12 grid grid-cols-3 border-y border-ink">
-            {STEPS.map((step, index) => (
-              <li
-                key={step.number}
-                className={index > 0 ? "border-l border-fog" : undefined}
-              >
-                <a
-                  href={step.href}
-                  className="flex h-full min-h-16 flex-col justify-center gap-1 px-2 py-3 transition-colors hover:bg-wheat sm:flex-row sm:items-center sm:justify-start sm:gap-3 sm:px-4"
-                >
-                  <span className="font-mono text-xs text-alert tabular-nums">
-                    {step.number}
-                  </span>
-                  <span className="text-sm leading-tight font-medium text-ink sm:text-base">
-                    {step.label}
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ol>
         </section>
 
-        <CookFlow />
-        <ShoppingList />
-        <MyRecipes />
-        <Leaderboard />
-
-        <Reveal effect="up">
-          <MyKitchen />
-        </Reveal>
+        <KitchenTabs
+          panels={{
+            cook: <CookFlow />,
+            "shopping-list": <ShoppingList />,
+            "my-recipes": <MyRecipes />,
+            "most-cooked": <Leaderboard />,
+            "my-kitchen": <MyKitchen />,
+          }}
+        />
       </main>
       <SiteFooter />
     </div>

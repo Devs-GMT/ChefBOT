@@ -1,21 +1,16 @@
-"use client";
-
 import type { ReactNode } from "react";
 
 import { PillNav } from "@/components/ui/pill-nav";
-import { useShoppingList } from "@/lib/shopping-list";
 
-/** Order follows the page: cook → what to buy → leaderboard → your ledger. */
+/** The workspace tabs (kitchen-tabs.tsx) navigate the app; the pill points home. */
+const LINKS = [
+  { href: "/", label: "Home" },
+  { href: "/#how", label: "How it works" },
+  { href: "/#faq", label: "FAQ" },
+];
+
 export function AppNav({ children }: { children?: ReactNode }) {
-  const toBuy = useShoppingList().filter((item) => !item.done).length;
-  const links = [
-    { href: "#cook", label: "Cook" },
-    { href: "#shopping-list", label: "List", badge: toBuy },
-    { href: "#my-recipes", label: "Mine" },
-    { href: "#most-cooked", label: "Most Cooked" },
-    { href: "#my-kitchen", label: "My Kitchen" },
-  ];
   return (
-    <PillNav label="ChefBOT app" homeHref="/" links={links} action={children} />
+    <PillNav label="ChefBOT app" homeHref="/" links={LINKS} action={children} />
   );
 }
