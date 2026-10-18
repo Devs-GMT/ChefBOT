@@ -15,14 +15,14 @@ accepted risks with remediation paths. Performed by the coding agent,
 | # | Boundary | Untrusted input | Direction |
 |---|---|---|---|
 | B1 | Browser → Worker `POST /recipes` | JSON body, `Origin` header, IP header | inbound |
-| B2 | Worker → OpenAI API | none (fixed URL/model); key custody critical | outbound |
+| B2 | Worker → Google Gemini API | none (fixed host; model from a Worker var); key custody critical | outbound |
 | B3 | LLM output → response → UI | model JSON (never trusted) | inbound |
 | B4 | Browser → BOT Chain RPC / wallet | chain data, user signatures | both |
 | B5 | Repo → runtime (env, git history) | leaked secrets | inbound |
 
 ### Assets
 
-- `OPENAI_API_KEY` (the only server-side secret)
+- `GEMINI_API_KEY` (the only server-side secret today; sent in the `x-goog-api-key` header, never in a URL)
 - Contract integrity (leaderboard/kitchen truth)
 - User wallet keys — **never touchable by this codebase** (MetaMask signs)
 - Availability of the recipe API (rate limits, size caps)
@@ -47,17 +47,22 @@ accepted risks with remediation paths. Performed by the coding agent,
   types, 2–12 ingredients, ≤40 chars each, minutes ∈ {10,20,30}, boolean flag.
   Frontend ids come from a fixed vocabulary (`lib/ingredients.ts`).
 - **Key hygiene (A02):** grep over `app|components|lib|shared|worker/src` —
-  `OPENAI`/`sk-` appear only in Worker env handling; `.env.example` holds
+  `GEMINI_API_KEY` appears only in Worker env handling; `.env.example` holds
   placeholders; `worker/.wrangler/` (contains `.dev.vars` if used) is
   gitignored. Set production key only via
-  `npx wrangler secret put OPENAI_API_KEY`.
+  `npx wrangler secret put GEMINI_API_KEY`; local `worker/.dev.vars` is git-ignored.
 - **LLM output handling (LLM05):** model output is parsed defensively,
   schema-validated before leaving the Worker, validated again by the client,
   and always rendered as React text nodes. No `dangerouslySetInnerHTML`,
   `eval`, or `innerHTML` anywhere (grep: 0 matches in `app/`).
 - **Error handling:** no stack traces in responses; Worker returns structured
   codes only (`invalid_json`, `rate_limited`, `ai_error`, …).
-- **SSRF:** the Worker fetches exactly one fixed URL (`OPENAI_URL`
+- **Prompt injection:** request ingredients must be ids from the fixed vocabulary
+  (`shared/ingredients.ts`) — free text never reaches the prompt; model output is
+  schema-validated and `uses` is filtered to the picked ids.
+- **Rate limiting:** 20 requests / IP / hour in a Durable Object (shared across
+  isolates); the in-memory limiter is only a fallback.
+- **SSRF:** the Worker fetches exactly one fixed host (`GEMINI_BASE_URL`
   constant). No user-influenced fetch target.
 - **Security headers:** added in `next.config.ts` for all routes —
   `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,

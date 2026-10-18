@@ -38,15 +38,19 @@ the exercise checklist below has **not** been run yet.
 
 ## 2. Worker live (Cloudflare)
 
-- [ ] `wrangler secret put OPENAI_API_KEY` set (verify with a live
+- [ ] `wrangler secret put GEMINI_API_KEY` set (verify with a live
       `/recipes` call, not by reading secrets back)
 - [ ] `CORS_ALLOWED_ORIGINS` includes **both** localhost and the final
       Vercel production URL (exact origins, no `*`)
-- [ ] `RATE_LIMIT_PER_HOUR` decided (default 20)
+- [ ] `RATE_LIMIT_PER_HOUR` decided (default 20); the `RATE_LIMITER`
+      Durable Object migration (`v1`, `new_sqlite_classes`) applied on deploy
+- [ ] Live latency of `POST /recipes` well under the 7 s Worker budget
+      (else change `GEMINI_MODEL`); 21st call in an hour → 429 + Retry-After
+- [ ] Reserved GitAura/PocketLM routes answer 501
 - [ ] Smoke: `/health` → `{"ok":true}`; a valid `POST /recipes` returns
       3 recipes; an unknown origin returns 403
 - [ ] No key in any response: response body never contains the key or
-      `api.openai.com`
+      `googleapis.com`
 
 ## 3. Mainnet (677) — deploy only after 1–2 pass
 
@@ -77,7 +81,7 @@ the exercise checklist below has **not** been run yet.
 - [ ] First git commit(s) — run the secret grep of §0 one more time
       before pushing; CI (`.github/workflows/ci.yml`) green on GitHub
 - [ ] If any secret ever lands in git history: **rotate first** (new
-      OpenAI key, new wrangler secret), then purge history
+      Gemini key in AI Studio, new wrangler secret), then purge history
 - [ ] Monitor Worker errors/rate-limit 429s and frontend error rate for
       the first day
 

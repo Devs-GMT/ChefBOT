@@ -22,11 +22,12 @@ Two surfaces:
 
 ```
 Browser (Next.js 16, wagmi/viem)
- ├─ POST {WORKER_URL}/recipes ──► Cloudflare Worker ──► OpenAI gpt-4o-mini
- │                                  (key stays server-side; schema-validated)
+ ├─ POST {WORKER_URL}/recipes ──► Cloudflare Worker ──► Google Gemini (free tier)
+ │                                  (key stays server-side; schema-validated;
+ │                                   20 req / IP / hour via Durable Object)
  │                                  failures → local "House favourites" fallback
  └─ RPC + wallet ──► BOT Chain (chain 968 testnet / 677 mainnet)
-                      contract ChefBOT: cookIt / getDishes / getMyDishes
+                      contract ChefBOT: cookIt / getDishes (keys + dishes) / getMyDishes
 ```
 
 - Recipe-key algorithm is byte-identical in Solidity
@@ -41,9 +42,9 @@ Browser (Next.js 16, wagmi/viem)
 |---|---|
 | Frontend | Next.js 16 (App Router, Turbopack) · React 19 · Tailwind 4 · TypeScript 5 |
 | Wallet/chain | wagmi 3 · viem 2 · @tanstack/react-query 5 |
-| Contract | Solidity `^0.8.20`, Hardhat 3 (16 tests) |
-| AI | Cloudflare Worker, OpenAI `gpt-4o-mini` (key: wrangler secret) |
-| Tests | vitest 104 (unit + RTL component + e2e-through-Worker) |
+| Contract | Solidity `^0.8.20`, Hardhat 3 (17 tests) |
+| AI | Cloudflare Worker (shared GitAura-style route table), Google Gemini `gemini-3.5-flash-lite` free tier (key: wrangler secret) |
+| Tests | vitest (unit + RTL component + e2e-through-Worker) · Hardhat |
 
 ## Quickstart
 
@@ -77,7 +78,7 @@ rebuild/redeploy (on Vercel: a new deployment is required).
 
 | Variable | Meaning | Default / current |
 |---|---|---|
-| `NEXT_PUBLIC_CHEFBOT_CONTRACT_ADDRESS` | ChefBOT contract address | `0x5191…D092` — **verified testnet (968) deployment**, checked on-chain 2026-10-16 (`recipeKey("Fried Rice")` matches the repo anchor). Empty → UI shows the "not deployed" notices |
+| `NEXT_PUBLIC_CHEFBOT_CONTRACT_ADDRESS` | ChefBOT contract address | `0x9398…cB85` — **verified testnet (968) deployment**, redeployed with the PRD §5 `getDishes()` and checked on-chain 2026-10-18 (`recipeKey("Fried Rice")` matches the repo anchor). Empty → UI shows the "not deployed" notices |
 | `NEXT_PUBLIC_CHEFBOT_CHAIN_ID` | Target chain: `968` testnet / `677` mainnet | `968` in `.env.example`; production default is `677` when unset |
 | `NEXT_PUBLIC_RECIPES_API_URL` | Worker base URL (no trailing slash) | `http://127.0.0.1:8787`; empty → fallback recipes, labeled |
 
@@ -85,17 +86,23 @@ rebuild/redeploy (on Vercel: a new deployment is required).
 
 | Variable | How to set | Notes |
 |---|---|---|
-| `OPENAI_API_KEY` | `npx wrangler secret put OPENAI_API_KEY` | never in code or git |
+| `GEMINI_API_KEY` | `npx wrangler secret put GEMINI_API_KEY` (local: `worker/.dev.vars`, git-ignored) | free key from Google AI Studio; never in code or git |
+| `GEMINI_MODEL` | `worker/wrangler.jsonc` → `vars` | default `gemini-3.5-flash-lite`; any free-tier Flash/Flash-Lite id works |
+| `GEMINI_THINKING_LEVEL` | same `vars` (optional) | e.g. `minimal`; unset = model default. Verify against the live API before enabling |
 | `CORS_ALLOWED_ORIGINS` | `worker/wrangler.jsonc` → `vars` | exact origins, comma-separated — **must include the final Vercel domain** or the browser will be blocked (403) |
-| `RATE_LIMIT_PER_HOUR` | same `vars` | default 20 per IP per hour |
+| `RATE_LIMIT_PER_HOUR` | same `vars` | default 20 per IP per hour, enforced by the `RATE_LIMITER` Durable Object (SQLite, free plan) |
+
+**Worker routes** (shared shape with GitAura / PocketLM): `GET /health`, `POST /recipes` (live). Reserved, answering `501` until the GitAura PRD specifies them: `GET /auth/github/login`, `GET /auth/github/callback`, `POST /auth/attest`, `POST /aura`, `POST /study`, `POST /ask`.
+
+**Privacy note:** on Gemini's free tier Google may use prompts to improve its products. ChefBOT only sends ingredient ids from a fixed list plus time and diet — no personal data, no wallet addresses.
 
 ## Smart contract (deployed by you, via Remix)
 
 1. Follow **[docs/remix-deployment.md](./docs/remix-deployment.md)**
    (compiler 0.8.34, optimizer 200 runs, Injected Provider).
 2. **Testnet (already done):** contract verified live at
-   `0x5191b250E9F18d640B2138a1Da0409be0f1dD092` on chain **968**
-   (`https://scan.bohr.life/address/0x5191b250E9F18d640B2138a1Da0409be0f1dD092`).
+   `0x939878F4aA5564B91aFa1e8758A100F14AAbcB85` on chain **968**
+   (`https://scan.bohr.life/address/0x939878F4aA5564B91aFa1e8758A100F14AAbcB85`).
    The on-chain `getDishes()` is currently empty — run the testnet exercise
    checklist in the guide before mainnet.
 3. **Mainnet:** deploy on chain 677, then update
@@ -112,7 +119,7 @@ this repo is verifiable on-chain (commands in the checklist).
 cd worker
 npm install
 npx wrangler login                      # or export CLOUDFLARE_API_TOKEN
-npx wrangler secret put OPENAI_API_KEY
+npx wrangler secret put GEMINI_API_KEY
 # edit wrangler.jsonc vars: CORS_ALLOWED_ORIGINS += your Vercel URL
 npx wrangler deploy
 # → https://<worker>.<account>.workers.dev
