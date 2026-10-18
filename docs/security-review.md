@@ -19,6 +19,7 @@ accepted risks with remediation paths. Performed by the coding agent,
 | B3 | LLM output → response → UI | model JSON (never trusted) | inbound |
 | B4 | Browser → BOT Chain RPC / wallet | chain data, user signatures | both |
 | B5 | Repo → runtime (env, git history) | leaked secrets | inbound |
+| B6 | Browser → Worker `POST /scan` (v1.1) | base64 photo ≤1 MB (body ≤1.5 MB), declared mime checked against magic bytes (JPEG/PNG/WebP only, no SVG); output locked to a vocabulary `enum` and re-filtered, so text inside a photo cannot steer it; photo never stored or logged; same per-IP budget; user consent before first upload | inbound |
 
 ### Assets
 

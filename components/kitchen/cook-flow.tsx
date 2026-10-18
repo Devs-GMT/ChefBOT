@@ -2,11 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { FridgeScan } from "@/components/kitchen/fridge-scan";
 import { IngredientPicker, ingredientEmoji } from "@/components/kitchen/ingredient-picker";
 import { RecipeCard, RecipeCardSkeleton } from "@/components/kitchen/recipe-card";
 import { SectionTag } from "@/components/ui/section-tag";
 import { INGREDIENT_GROUPS } from "@/lib/ingredients";
 import { getRecipes, type RecipeResult } from "@/lib/recipes";
+import { MAX_INGREDIENTS } from "@/shared/recipe-schema";
 
 const TIME_OPTIONS = [10, 20, 30] as const;
 
@@ -39,6 +41,13 @@ export function CookFlow() {
       current.includes(id)
         ? current.filter((item) => item !== id)
         : [...current, id],
+    );
+  }
+
+  /** Scan results join the picks (never replace them), up to the cap. */
+  function addIngredients(ids: string[]) {
+    setSelected((current) =>
+      [...current, ...ids.filter((id) => !current.includes(id))].slice(0, MAX_INGREDIENTS),
     );
   }
 
@@ -94,6 +103,7 @@ export function CookFlow() {
 
       <form onSubmit={handleSubmit} className="mt-8">
         <div className="rounded-[28px] border border-fog bg-paper p-4 shadow-card sm:p-8">
+          <FridgeScan onDetected={addIngredients} />
           <IngredientPicker selected={selected} onToggle={toggleIngredient} />
 
           <div className="mt-8 grid gap-6 border-t border-fog pt-6 sm:grid-cols-2">

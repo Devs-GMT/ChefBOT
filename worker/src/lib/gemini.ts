@@ -40,6 +40,10 @@ export interface GeminiCall {
   responseSchema: unknown;
   thinkingLevel?: string;
   temperature?: number;
+  /** Optional photo sent before the text part (fridge scan). */
+  image?: { mimeType: string; data: string };
+  /** Defaults to AI_TIMEOUT_MS. */
+  timeoutMs?: number;
 }
 
 export type GeminiOutcome =
@@ -61,7 +65,7 @@ export async function callGemini(
   fetchImpl: typeof fetch = fetch,
 ): Promise<GeminiOutcome> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), AI_TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), call.timeoutMs ?? AI_TIMEOUT_MS);
   try {
     const generationConfig: Record<string, unknown> = {
       temperature: call.temperature ?? 0.7,
@@ -77,7 +81,15 @@ export async function callGemini(
       headers: { "Content-Type": "application/json", "x-goog-api-key": call.apiKey },
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: call.system }] },
-        contents: [{ role: "user", parts: [{ text: call.user }] }],
+        contents: [
+          {
+            role: "user",
+            parts: [
+              ...(call.image ? [{ inlineData: call.image }] : []),
+              { text: call.user },
+            ],
+          },
+        ],
         generationConfig,
       }),
       signal: controller.signal,

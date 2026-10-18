@@ -92,7 +92,7 @@ rebuild/redeploy (on Vercel: a new deployment is required).
 | `CORS_ALLOWED_ORIGINS` | `worker/wrangler.jsonc` → `vars` | exact origins, comma-separated — **must include the final Vercel domain** or the browser will be blocked (403) |
 | `RATE_LIMIT_PER_HOUR` | same `vars` | default 20 per IP per hour, enforced by the `RATE_LIMITER` Durable Object (SQLite, free plan) |
 
-**Worker routes** (shared shape with GitAura / PocketLM): `GET /health`, `POST /recipes` (live). Reserved, answering `501` until the GitAura PRD specifies them: `GET /auth/github/login`, `GET /auth/github/callback`, `POST /auth/attest`, `POST /aura`, `POST /study`, `POST /ask`.
+**Worker routes** (shared shape with GitAura / PocketLM): `GET /health`, `POST /recipes` (live), `POST /scan` (v1.1 fridge photo → ingredient ids; on `feat/v1.1` until merged). Reserved, answering `501` until the GitAura PRD specifies them: `GET /auth/github/login`, `GET /auth/github/callback`, `POST /auth/attest`, `POST /aura`, `POST /study`, `POST /ask`.
 
 **Privacy note:** on Gemini's free tier Google may use prompts to improve its products. ChefBOT only sends ingredient ids from a fixed list plus time and diet — no personal data, no wallet addresses.
 

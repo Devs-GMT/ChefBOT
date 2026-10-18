@@ -2,6 +2,7 @@ import type { WorkerEnv } from "./env";
 import type { HeaderMap } from "./lib/http";
 import { handleRecipes } from "./routes/recipes";
 import { notImplemented } from "./routes/reserved";
+import { handleScan } from "./routes/scan";
 
 export type Handler = (
   request: Request,
@@ -21,6 +22,7 @@ export interface Route {
 export const ROUTES: Route[] = [
   // ChefBOT
   { method: "POST", path: "/recipes", handler: handleRecipes, limited: true },
+  { method: "POST", path: "/scan", handler: handleScan, limited: true },
   // GitAura — reserved until specified
   { method: "GET", path: "/auth/github/login", handler: notImplemented, limited: true },
   { method: "GET", path: "/auth/github/callback", handler: notImplemented, limited: true },

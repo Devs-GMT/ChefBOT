@@ -1,6 +1,6 @@
 # Spec: ChefBOT v1.1 — post-MVP kitchen helpers
 
-Status: **draft, awaiting owner approval** · Branch: `feat/v1.1` · Merged only after
+Status: **approved 2026-10-18 — implemented on `feat/v1.1` (not merged)** · Branch: `feat/v1.1` · Merged only after
 the MVP (Phase C, Vercel) is live and verified.
 
 ## Objective
