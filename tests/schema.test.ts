@@ -272,6 +272,42 @@ describe("shared ingredient vocabulary", () => {
     expect(isKnownIngredient("EGG")).toBe(true);
     expect(isKnownIngredient("caviar")).toBe(false);
   });
+
+  const V12 = {
+    protein: ["chicken thigh", "beef", "sausage", "tempeh", "fish fillet", "milk"],
+    vegetables: [
+      "cucumber", "cabbage", "cauliflower", "eggplant", "green beans", "long beans",
+      "bok choy", "corn", "peas", "avocado", "apple", "banana", "lime", "ginger", "shallot",
+    ],
+    grains: ["rice vermicelli"],
+    pantry: ["oyster sauce"],
+  } as const;
+
+  it("adds the v1.2 staples to the right groups (scan + picker vocabulary)", () => {
+    for (const [group, ids] of Object.entries(V12)) {
+      const found = INGREDIENT_GROUPS.find((g) => g.id === group)?.ingredients.map((i) => i.id) ?? [];
+      for (const id of ids) {
+        expect(found, `${id} in ${group}`).toContain(id);
+      }
+    }
+    expect(ALL_INGREDIENT_IDS.length).toBe(62);
+  });
+
+  it("accepts the new ids in recipe requests", () => {
+    const result = validateRecipesRequest({
+      ingredients: ["tempeh", "long beans", "shallot", "oyster sauce"],
+      maxMinutes: 20,
+      vegetarian: true,
+    });
+    expect(result.ok).toBe(true);
+  });
+
+  it("keeps ids lowercase, trimmed and short enough for the schema", () => {
+    for (const id of ALL_INGREDIENT_IDS) {
+      expect(id).toBe(id.trim().toLowerCase());
+      expect(id.length).toBeLessThanOrEqual(40);
+    }
+  });
 });
 
 describe("validateRecipesResponse — optional nutrition estimate (v1.1)", () => {

@@ -53,6 +53,26 @@ const EMOJI: Record<string, string> = {
   vinegar: "🍶",
   sugar: "🍬",
   "curry paste": "🍛",
+  "chicken thigh": "🍗",
+  beef: "🥩",
+  sausage: "🌭",
+  tempeh: "🟫",
+  "fish fillet": "🐠",
+  milk: "🥛",
+  cabbage: "🥬",
+  cauliflower: "🥦",
+  eggplant: "🍆",
+  "green beans": "🫛",
+  "long beans": "🫛",
+  "bok choy": "🥬",
+  peas: "🫛",
+  lime: "🍋",
+  ginger: "🫚",
+  shallot: "🧅",
+  "rice vermicelli": "🍜",
+  "oyster sauce": "🦪",
+  "spring onion": "🌱",
+  chili: "🌶️",
 };
 
 const BLURB: Record<string, string> = {
@@ -184,9 +204,11 @@ export function IngredientPicker({ selected, onToggle }: IngredientPickerProps) 
                 <span className="min-w-0 flex-1 leading-tight">
                   {ingredient.label}
                 </span>
+                {/* Decorative tick; dropped on narrow phones so long names
+                    ("Cauliflower") fit — the filled chip already shows state. */}
                 <span
                   aria-hidden="true"
-                  className={`flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] ${
+                  className={`hidden size-5 shrink-0 items-center justify-center rounded-full text-[11px] min-[400px]:flex ${
                     isSelected
                       ? "bg-alert text-white"
                       : "border border-ash text-transparent"

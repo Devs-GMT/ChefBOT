@@ -1,11 +1,11 @@
 {
   "_note": "Ground truth for `npm run eval:scan`, restricted to the ChefBOT vocabulary (shared/ingredients.ts). `expect` = clearly visible; `ambiguous` = not counted either way. Add your own photos to worker/eval-photos/ (git-ignored) with a labels.json of the same shape.",
   "chopping.jpg": { "expect": ["onion"], "ambiguous": [] },
-  "greens.jpg": { "expect": ["lemon"], "ambiguous": [] },
-  "pantry-flatlay.jpg": { "expect": ["tomato", "onion", "potato", "garlic"], "ambiguous": [] },
-  "poke-bowl.jpg": { "expect": ["salmon"], "ambiguous": ["rice"] },
-  "prep.jpg": { "expect": ["tomato", "spring onion"], "ambiguous": [] },
-  "ramen.jpg": { "expect": ["egg", "noodle", "spring onion", "mushroom"], "ambiguous": ["chili"] },
-  "rice-skillet.jpg": { "expect": ["rice", "shrimp", "lemon", "carrot"], "ambiguous": ["bell pepper", "chili"] },
-  "salmon-plate.jpg": { "expect": ["salmon", "tomato"], "ambiguous": ["rice"] }
+  "greens.jpg": { "expect": ["lemon", "cucumber", "apple", "ginger"], "ambiguous": ["cabbage"] },
+  "pantry-flatlay.jpg": { "expect": ["tomato", "onion", "potato", "garlic", "cucumber", "apple"], "ambiguous": [] },
+  "poke-bowl.jpg": { "expect": ["salmon", "avocado", "cucumber"], "ambiguous": ["rice", "peas", "cabbage"] },
+  "prep.jpg": { "expect": ["tomato", "spring onion", "cauliflower", "corn"], "ambiguous": [] },
+  "ramen.jpg": { "expect": ["egg", "noodle", "spring onion", "mushroom", "sausage"], "ambiguous": ["chili", "cabbage"] },
+  "rice-skillet.jpg": { "expect": ["rice", "shrimp", "lemon", "carrot", "peas"], "ambiguous": ["bell pepper", "chili", "sausage"] },
+  "salmon-plate.jpg": { "expect": ["salmon", "tomato", "green beans"], "ambiguous": ["rice"] }
 }

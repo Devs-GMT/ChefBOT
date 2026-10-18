@@ -2,7 +2,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { IngredientPicker } from "@/components/kitchen/ingredient-picker";
+import { IngredientPicker, ingredientEmoji } from "@/components/kitchen/ingredient-picker";
+import { ALL_INGREDIENT_IDS } from "@/lib/ingredients";
 
 describe("IngredientPicker", () => {
   it("groups ingredients into food-group tabs", () => {
@@ -54,5 +55,12 @@ describe("IngredientPicker", () => {
 
     await user.click(screen.getByRole("button", { name: "Tofu" }));
     expect(onToggle).toHaveBeenCalledWith("tofu");
+  });
+});
+
+describe("ingredientEmoji", () => {
+  it("has a glyph for every vocabulary id", () => {
+    const missing = ALL_INGREDIENT_IDS.filter((id) => ingredientEmoji(id) === "•");
+    expect(missing).toEqual([]);
   });
 });
