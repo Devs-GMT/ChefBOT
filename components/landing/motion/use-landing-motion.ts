@@ -2,6 +2,7 @@
 
 import type { RefObject } from "react";
 
+import { afterIntro } from "../intro/intro-script";
 import { DESKTOP, EASE_OUT, MOTION_OK, gsap, SplitText, TOUCH, useGSAP } from "./gsap";
 
 export interface MotionContext {
@@ -115,24 +116,31 @@ export function useLandingMotion(
         requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
         cancelIdleCallback?: (handle: number) => void;
       };
-      if (lazy) {
-        observer = new IntersectionObserver(
-          (entries) => {
-            if (entries.some((entry) => entry.isIntersecting)) {
-              buildOnce();
-            }
-          },
-          { rootMargin: "100% 0px" },
-        );
-        observer.observe(root);
-        idleHandle = win.requestIdleCallback
-          ? win.requestIdleCallback(buildOnce, { timeout: 4000 })
-          : window.setTimeout(buildOnce, 1500);
-      } else {
-        setup();
-      }
+      // Nothing runs while the intro curtain plays: section setup (SplitText,
+      // ScrollTriggers, pins) would compete with it for the main thread, and
+      // every section is hidden behind it anyway.
+      const begin = () => {
+        if (lazy) {
+          observer = new IntersectionObserver(
+            (entries) => {
+              if (entries.some((entry) => entry.isIntersecting)) {
+                buildOnce();
+              }
+            },
+            { rootMargin: "100% 0px" },
+          );
+          observer.observe(root);
+          idleHandle = win.requestIdleCallback
+            ? win.requestIdleCallback(buildOnce, { timeout: 4000 })
+            : window.setTimeout(buildOnce, 1500);
+        } else {
+          setup();
+        }
+      };
+      const cancelWait = afterIntro(begin);
 
       return () => {
+        cancelWait();
         observer?.disconnect();
         if (idleHandle) {
           if (win.cancelIdleCallback) {

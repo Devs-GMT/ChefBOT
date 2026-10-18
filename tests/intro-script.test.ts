@@ -1,11 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  afterIntro,
+  INTRO_DONE_EVENT,
   INTRO_SEEN_KEY,
   isLiteDevice,
   MOTION_FALLBACK_MS,
   PREPAINT_SCRIPT,
   shouldPlayIntro,
+  splitIntroWord,
 } from "@/components/landing/intro/intro-script";
 
 describe("shouldPlayIntro", () => {
@@ -104,5 +107,66 @@ describe("PREPAINT_SCRIPT", () => {
     root.classList.add("motion-ready");
     vi.advanceTimersByTime(MOTION_FALLBACK_MS);
     expect(root.classList.contains("motion")).toBe(true);
+  });
+});
+
+describe("splitIntroWord", () => {
+  it("splits into words of characters with one running index for the stagger", () => {
+    expect(splitIntroWord("Real Food.")).toEqual([
+      [
+        { ch: "R", i: 0 },
+        { ch: "e", i: 1 },
+        { ch: "a", i: 2 },
+        { ch: "l", i: 3 },
+      ],
+      [
+        { ch: "F", i: 4 },
+        { ch: "o", i: 5 },
+        { ch: "o", i: 6 },
+        { ch: "d", i: 7 },
+        { ch: ".", i: 8 },
+      ],
+    ]);
+  });
+});
+
+describe("afterIntro", () => {
+  afterEach(() => {
+    document.documentElement.classList.remove("intro-active");
+    vi.useRealTimers();
+  });
+
+  it("runs right away when no intro is playing", () => {
+    const run = vi.fn();
+    afterIntro(run);
+    expect(run).toHaveBeenCalledTimes(1);
+  });
+
+  it("waits for the intro to finish, once", () => {
+    document.documentElement.classList.add("intro-active");
+    const run = vi.fn();
+    afterIntro(run);
+    expect(run).not.toHaveBeenCalled();
+    window.dispatchEvent(new Event(INTRO_DONE_EVENT));
+    window.dispatchEvent(new Event(INTRO_DONE_EVENT));
+    expect(run).toHaveBeenCalledTimes(1);
+  });
+
+  it("never waits forever", () => {
+    vi.useFakeTimers();
+    document.documentElement.classList.add("intro-active");
+    const run = vi.fn();
+    afterIntro(run, 9000);
+    vi.advanceTimersByTime(9000);
+    expect(run).toHaveBeenCalledTimes(1);
+  });
+
+  it("can be cancelled", () => {
+    document.documentElement.classList.add("intro-active");
+    const run = vi.fn();
+    const cancel = afterIntro(run);
+    cancel();
+    window.dispatchEvent(new Event(INTRO_DONE_EVENT));
+    expect(run).not.toHaveBeenCalled();
   });
 });

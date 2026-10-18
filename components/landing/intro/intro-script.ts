@@ -48,3 +48,48 @@ export function shouldPlayIntro({
 }
 
 export const PREPAINT_SCRIPT = `(function(){try{var d=document.documentElement;if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;d.classList.add("motion");var seen=false;try{seen=!!sessionStorage.getItem(${JSON.stringify(INTRO_SEEN_KEY)})}catch(e){}var n=navigator,c=n.connection,lite=!!(c&&c.saveData)||(typeof n.deviceMemory==="number"&&n.deviceMemory<=2);if(!seen&&!lite)d.classList.add("intro-active");setTimeout(function(){if(!d.classList.contains("motion-ready")){d.classList.remove("motion");d.classList.remove("intro-active")}},${MOTION_FALLBACK_MS})}catch(e){}})();`;
+
+export interface IntroChar {
+  ch: string;
+  /** Running index across words — drives the CSS stagger (--i). */
+  i: number;
+}
+
+/**
+ * Pre-split the intro word at render time (static spans, CSS-animated), so
+ * the opening needs no runtime text splitting.
+ */
+export function splitIntroWord(text: string): IntroChar[][] {
+  let i = 0;
+  return text
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => Array.from(word, (ch) => ({ ch, i: i++ })));
+}
+
+/**
+ * Run `run` once the intro has finished (or now, if none is playing), so
+ * heavy landing setup never competes with it. Capped so it can't hang.
+ * Returns a cancel function.
+ */
+export function afterIntro(run: () => void, maxWaitMs = 9000): () => void {
+  if (!document.documentElement.classList.contains("intro-active")) {
+    run();
+    return () => {};
+  }
+  let done = false;
+  const fire = () => {
+    if (done) return;
+    done = true;
+    window.removeEventListener(INTRO_DONE_EVENT, fire);
+    window.clearTimeout(timer);
+    run();
+  };
+  window.addEventListener(INTRO_DONE_EVENT, fire);
+  const timer = window.setTimeout(fire, maxWaitMs);
+  return () => {
+    done = true;
+    window.removeEventListener(INTRO_DONE_EVENT, fire);
+    window.clearTimeout(timer);
+  };
+}
