@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppNav } from "@/components/kitchen/app-nav";
 import { RecipeCard } from "@/components/kitchen/recipe-card";
 import { ShoppingList } from "@/components/kitchen/shopping-list";
-import { clearShoppingList, getShoppingList } from "@/lib/shopping-list";
+import { addShoppingItems, clearShoppingList, getShoppingList, toggleShoppingItem } from "@/lib/shopping-list";
 import type { Recipe } from "@/shared/recipe-schema";
 import { renderWithProviders } from "./render-with-providers";
 
@@ -87,10 +87,14 @@ describe("ShoppingList section", () => {
     expect(within(list).getByLabelText("fish sauce")).toBeInTheDocument();
 
     await user.click(within(list).getByLabelText("Garlic"));
-    expect(within(list).getByLabelText("Garlic")).toBeChecked();
+    // Checked items fold away under their own list at the bottom of the receipt.
+    expect(within(list).queryByLabelText("Garlic")).not.toBeInTheDocument();
+    const checked = screen.getByRole("list", { name: "Checked items" });
+    expect(within(checked).getByLabelText("Garlic")).toBeChecked();
+    expect(screen.getByText("1 checked")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Remove checked" }));
-    expect(within(list).queryByLabelText("Garlic")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Garlic")).not.toBeInTheDocument();
     expect(getShoppingList()).toEqual([{ name: "fish sauce", done: false }]);
   });
 
@@ -145,5 +149,29 @@ describe("ShoppingList section", () => {
     expect(
       screen.getByRole("button", { name: "Add missing to shopping list" }),
     ).toBeEnabled();
+  });
+});
+
+describe("Shopping List — receipt", () => {
+  it("prints items under food-group headings with a running total", async () => {
+    addShoppingItems(["egg", "fish sauce", "rice", "garlic"]);
+    toggleShoppingItem("rice");
+    renderWithProviders(<ShoppingList />);
+
+    const list = screen.getByRole("list", { name: "Items to buy" });
+    const headings = within(list).getAllByRole("heading").map((h) => h.textContent);
+    expect(headings).toEqual(["Protein & Fats", "Pantry", "Other"]);
+    expect(screen.getByText(/Items 4 · Checked 1/i)).toBeInTheDocument();
+  });
+
+  it("prints twelve open items, then the rest on demand", async () => {
+    const user = userEvent.setup();
+    addShoppingItems(Array.from({ length: 15 }, (_, i) => `thing ${i + 1}`));
+    renderWithProviders(<ShoppingList />);
+
+    const list = screen.getByRole("list", { name: "Items to buy" });
+    expect(within(list).getAllByRole("checkbox")).toHaveLength(12);
+    await user.click(screen.getByRole("button", { name: "Print all · 3 more" }));
+    expect(within(list).getAllByRole("checkbox")).toHaveLength(15);
   });
 });

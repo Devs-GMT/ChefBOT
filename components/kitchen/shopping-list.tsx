@@ -2,13 +2,12 @@
 
 import { useState, useSyncExternalStore } from "react";
 
+import { Receipt } from "@/components/kitchen/shopping-receipt";
 import { SectionTag } from "@/components/ui/section-tag";
 import {
   clearShoppingList,
   formatShoppingList,
   removeDoneItems,
-  shoppingLabel,
-  toggleShoppingItem,
   useShoppingList,
 } from "@/lib/shopping-list";
 
@@ -66,35 +65,17 @@ export function ShoppingList() {
         </p>
       </div>
 
-      <div className="mt-8 rounded-[28px] border border-fog bg-paper p-4 shadow-card sm:p-8">
+      <div className="mt-8 rounded-[28px] bg-wheat px-4 py-8 sm:px-8 sm:py-10">
         {items.length === 0 ? (
-          <p className="text-sm text-brick">
+          <p className="text-center text-sm text-brick">
             <span className="font-medium text-ink">Nothing to buy yet.</span>{" "}
             Tap “+ Shopping list” on a recipe and its missing items land here.
           </p>
         ) : (
           <>
-            <ul aria-label="Items to buy" className="grid gap-1 sm:grid-cols-2">
-              {items.map((item) => (
-                <li key={item.name}>
-                  <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl px-2 hover:bg-wheat">
-                    <input
-                      type="checkbox"
-                      checked={item.done}
-                      onChange={() => toggleShoppingItem(item.name)}
-                      className="size-5 accent-[var(--color-ink)]"
-                    />
-                    <span
-                      className={`text-[15px] ${item.done ? "text-brick line-through" : "text-ink"}`}
-                    >
-                      {shoppingLabel(item.name)}
-                    </span>
-                  </label>
-                </li>
-              ))}
-            </ul>
+            <Receipt items={items} />
 
-            <div className="mt-6 flex flex-wrap gap-2 border-t border-fog pt-5">
+            <div className="mt-6 flex flex-wrap justify-center gap-2">
               <button type="button" onClick={copy} className={ACTION}>
                 Copy
               </button>
@@ -125,7 +106,7 @@ export function ShoppingList() {
           </>
         )}
         {notice && (
-          <p role="status" className="mt-4 text-sm text-brick">
+          <p role="status" className="mt-4 text-center text-sm text-brick">
             {notice}
           </p>
         )}

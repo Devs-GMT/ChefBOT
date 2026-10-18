@@ -7,6 +7,7 @@ import {
   clearShoppingList,
   formatShoppingList,
   getShoppingList,
+  groupShoppingItems,
   removeDoneItems,
   shoppingLabel,
   subscribeShoppingList,
@@ -127,5 +128,29 @@ describe("shopping list text", () => {
       { name: "lemon", done: false },
     ]);
     expect(text).toBe("ChefBOT shopping list\n- [ ] Lemon\n- [x] Garlic");
+  });
+});
+
+describe("groupShoppingItems (receipt sections)", () => {
+  it("groups known ids by food group in picker order, free text last under Other", () => {
+    const groups = groupShoppingItems([
+      { name: "garlic", done: false },
+      { name: "fish sauce", done: false },
+      { name: "lemon", done: true },
+      { name: "rice", done: false },
+      { name: "egg", done: false },
+    ]);
+    expect(groups.map((g) => [g.title, g.items.map((i) => i.name)])).toEqual([
+      ["Protein & Fats", ["egg"]],
+      ["Vegetables & Fruits", ["lemon"]],
+      ["Grains", ["rice"]],
+      ["Pantry", ["garlic"]],
+      ["Other", ["fish sauce"]],
+    ]);
+  });
+
+  it("drops empty groups", () => {
+    expect(groupShoppingItems([{ name: "rice", done: false }]).map((g) => g.title)).toEqual(["Grains"]);
+    expect(groupShoppingItems([])).toEqual([]);
   });
 });

@@ -136,3 +136,26 @@ export function formatShoppingList(list: readonly ShoppingItem[]): string {
     ...ordered.map((item) => `- [${item.done ? "x" : " "}] ${shoppingLabel(item.name)}`),
   ].join("\n");
 }
+
+export interface ShoppingGroup {
+  id: string;
+  title: string;
+  items: ShoppingItem[];
+}
+
+const GROUP_OF = new Map(
+  INGREDIENT_GROUPS.flatMap((group) => group.ingredients.map((i) => [i.id, group.id] as const)),
+);
+
+/** Receipt sections: food groups in picker order, the AI's free-text items last as "Other". */
+export function groupShoppingItems(list: readonly ShoppingItem[]): ShoppingGroup[] {
+  const groups: ShoppingGroup[] = [
+    ...INGREDIENT_GROUPS.map((group) => ({ id: group.id, title: group.title, items: [] as ShoppingItem[] })),
+    { id: "other", title: "Other", items: [] },
+  ];
+  for (const item of list) {
+    const id = GROUP_OF.get(item.name) ?? "other";
+    groups.find((group) => group.id === id)!.items.push(item);
+  }
+  return groups.filter((group) => group.items.length > 0);
+}
