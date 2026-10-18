@@ -3,13 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import {
   useConnect,
-  useConnection,
   useSwitchChain,
   useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
 
 import { WalletWaitHint } from "@/components/kitchen/wallet-wait-hint";
+import { useWalletConnection } from "@/lib/use-wallet-connection";
 import { chefbotAbi } from "@/lib/abi/ChefBOT";
 import { explorerTxUrl } from "@/lib/chain";
 import { contractAddress } from "@/lib/contract";
@@ -39,7 +39,7 @@ export function CookButton({
   /** Post the full recipe to the shared archive after a stamp (off for private recipes). */
   archive?: boolean;
 }) {
-  const connection = useConnection();
+  const connection = useWalletConnection();
   const {
     mutateAsync: connectAsync,
     connectors,

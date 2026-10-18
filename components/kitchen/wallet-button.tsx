@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useConnect, useConnection, useDisconnect, useSwitchChain } from "wagmi";
+import { useConnect, useDisconnect, useSwitchChain } from "wagmi";
 
 import { WalletWaitHint } from "@/components/kitchen/wallet-wait-hint";
 import { shortenAddress } from "@/lib/address";
 import { targetChainId } from "@/lib/wagmi";
+import { useWalletConnection } from "@/lib/use-wallet-connection";
 import {
   connectFirstAvailable,
   connectedChainId,
@@ -24,7 +25,7 @@ export interface WalletButtonProps {
 
 export function WalletButton({ tone = "light" }: WalletButtonProps) {
   const dark = tone === "dark";
-  const connection = useConnection();
+  const connection = useWalletConnection();
   const {
     mutateAsync: connectAsync,
     connectors,
