@@ -30,23 +30,20 @@ function requireAddress(): `0x${string}` {
   return address;
 }
 
-/** All stamped dishes (leaderboard source), unordered. */
+/**
+ * All stamped dishes (leaderboard source), unordered. One `getDishes()`
+ * call returns keys and dishes together, so they are always index-aligned
+ * (two separate reads could straddle a new stamp).
+ */
 export async function fetchDishes(): Promise<DishEntry[]> {
   const address = requireAddress();
-  const [keys, dishes] = await Promise.all([
-    publicClientFor().readContract({
-      address,
-      abi: chefbotAbi,
-      functionName: "getDishKeys",
-    }),
-    publicClientFor().readContract({
-      address,
-      abi: chefbotAbi,
-      functionName: "getDishes",
-    }),
-  ]);
-  const typedKeys = keys as `0x${string}`[];
-  const typedDishes = dishes as unknown as DishStruct[];
+  const [keys, dishes] = (await publicClientFor().readContract({
+    address,
+    abi: chefbotAbi,
+    functionName: "getDishes",
+  })) as readonly [readonly `0x${string}`[], readonly DishStruct[]];
+  const typedKeys = [...keys];
+  const typedDishes = [...dishes];
   return typedKeys.map((key, index) => ({
     key,
     title: typedDishes[index]?.title ?? "",

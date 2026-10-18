@@ -61,7 +61,8 @@ describe("ChefBOT", async () => {
       assert.equal(dish.emoji, "🍳");
       assert.equal(dish.cooks, 1);
 
-      assert.deepEqual(await chefbot.read.getDishKeys(), [KEY_FRIED_RICE]);
+      const [keys] = await chefbot.read.getDishes();
+      assert.deepEqual(keys, [KEY_FRIED_RICE]);
       assert.equal(await chefbot.read.cooked([KEY_FRIED_RICE, alice.account.address]), true);
       assert.equal(await chefbot.read.cooked([KEY_FRIED_RICE, bob.account.address]), false);
       assert.deepEqual(await chefbot.read.getMyDishes([alice.account.address]), [
@@ -122,7 +123,7 @@ describe("ChefBOT", async () => {
       const dish = await chefbot.read.getDish([KEY_FRIED_RICE]);
       assert.equal(dish.cooks, 2);
       assert.equal(dish.title, "Fried Rice"); // first registrant's display title
-      assert.equal((await chefbot.read.getDishKeys()).length, 1);
+      assert.equal((await chefbot.read.getDishes())[0].length, 1);
       assert.equal(await chefbot.read.cooked([KEY_FRIED_RICE, alice.account.address]), true);
       assert.equal(await chefbot.read.cooked([KEY_FRIED_RICE, bob.account.address]), true);
       assert.deepEqual(await chefbot.read.getMyDishes([bob.account.address]), [
@@ -159,7 +160,8 @@ describe("ChefBOT", async () => {
         KEY_GARLIC_EGG_FRIED_RICE,
       ]);
 
-      const dishes = await chefbot.read.getDishes();
+      const [keys, dishes] = await chefbot.read.getDishes();
+      assert.deepEqual(keys, [KEY_FRIED_RICE, KEY_GARLIC_EGG_FRIED_RICE]);
       assert.equal(dishes.length, 2);
       assert.deepEqual(
         dishes.map((d) => d.title),
@@ -174,7 +176,24 @@ describe("ChefBOT", async () => {
     it("returns an empty list for wallets with no stamps", async () => {
       const chefbot = await viem.deployContract("ChefBOT");
       assert.deepEqual(await chefbot.read.getMyDishes([alice.account.address]), []);
-      assert.deepEqual(await chefbot.read.getDishes(), []);
+      assert.deepEqual(await chefbot.read.getDishes(), [[], []]);
+    });
+
+    it("returns keys and dishes index-aligned in one call (PRD §5)", async () => {
+      const chefbot = await viem.deployContract("ChefBOT");
+      await chefbot.write.cookIt(["Garlic Egg Fried Rice", "🍳"], { account: alice.account });
+      await chefbot.write.cookIt(["Fried Rice", "🍚"], { account: alice.account });
+      await chefbot.write.cookIt(["fried rice", "🍚"], { account: bob.account });
+
+      const [keys, dishes] = await chefbot.read.getDishes();
+      assert.equal(keys.length, dishes.length);
+      for (let i = 0; i < keys.length; i++) {
+        assert.equal(keys[i], await chefbot.read.recipeKey([dishes[i]!.title]));
+      }
+      assert.deepEqual(
+        dishes.map((d) => [d.title, d.cooks]),
+        [["Garlic Egg Fried Rice", 1], ["Fried Rice", 2]],
+      );
     });
   });
 

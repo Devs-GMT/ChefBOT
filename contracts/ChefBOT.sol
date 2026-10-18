@@ -78,17 +78,19 @@ contract ChefBOT {
         emit Cooked(key, msg.sender, dish.title, dish.cooks);
     }
 
-    /// @notice All registered dishes, insertion order (leaderboard source).
-    function getDishes() external view returns (Dish[] memory result) {
-        result = new Dish[](dishKeys.length);
-        for (uint256 i = 0; i < dishKeys.length; i++) {
-            result[i] = dishes[dishKeys[i]];
+    /// @notice All registered dishes with their keys, insertion order
+    ///         (leaderboard source; the frontend sorts). `keys[i]` is the
+    ///         recipe key of `list[i]` — one call, so they can never drift.
+    function getDishes()
+        external
+        view
+        returns (bytes32[] memory keys, Dish[] memory list)
+    {
+        keys = dishKeys;
+        list = new Dish[](keys.length);
+        for (uint256 i = 0; i < keys.length; i++) {
+            list[i] = dishes[keys[i]];
         }
-    }
-
-    /// @notice All registered dish keys, insertion order.
-    function getDishKeys() external view returns (bytes32[] memory) {
-        return dishKeys;
     }
 
     /// @notice Recipe keys recorded by a wallet (My Kitchen source).

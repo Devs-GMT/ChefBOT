@@ -212,21 +212,13 @@ export const chefbotAbi = [
   },
   {
     "inputs": [],
-    "name": "getDishKeys",
+    "name": "getDishes",
     "outputs": [
       {
         "internalType": "bytes32[]",
-        "name": "",
+        "name": "keys",
         "type": "bytes32[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getDishes",
-    "outputs": [
+      },
       {
         "components": [
           {
@@ -246,7 +238,7 @@ export const chefbotAbi = [
           }
         ],
         "internalType": "struct ChefBOT.Dish[]",
-        "name": "result",
+        "name": "list",
         "type": "tuple[]"
       }
     ],
