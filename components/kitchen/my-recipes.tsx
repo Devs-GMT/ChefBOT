@@ -2,7 +2,7 @@
 
 import { useId, useState, type FormEvent } from "react";
 
-import { RecipeCard } from "@/components/kitchen/recipe-card";
+import { RecipeBox } from "@/components/kitchen/recipe-box";
 import { SectionTag } from "@/components/ui/section-tag";
 import {
   MAX_MY_MINUTES,
@@ -42,6 +42,7 @@ export function MyRecipes() {
   const [draft, setDraft] = useState<RecipeDraft | null>(null);
   const [editing, setEditing] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
+  const [openTitle, setOpenTitle] = useState<string | null>(null);
   const formId = useId();
 
   function open(next: RecipeDraft, title?: string) {
@@ -70,6 +71,8 @@ export function MyRecipes() {
       return;
     }
     close();
+    // A freshly saved recipe opens in full, ready to cook.
+    setOpenTitle(recipe.value.title);
   }
 
   const field = (key: keyof RecipeDraft) => ({
@@ -166,40 +169,35 @@ export function MyRecipes() {
       </div>
 
       {recipes.length > 0 && (
-        <div className="mt-6 space-y-4">
-          {recipes.map((recipe, index) => (
-            <RecipeCard
-              key={recipe.title}
-              recipe={recipe}
-              index={index}
-              total={recipes.length}
-              archive={false}
-              actions={
-                <>
-                  <button
-                    type="button"
-                    aria-label={`Edit ${recipe.title}`}
-                    onClick={() => open(toDraft(recipe), recipe.title)}
-                    className={SECONDARY}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={`Delete ${recipe.title}`}
-                    onClick={() => {
-                      if (editing === recipe.title) close();
-                      deleteMyRecipe(recipe.title);
-                    }}
-                    className={DANGER}
-                  >
-                    Delete
-                  </button>
-                </>
-              }
-            />
-          ))}
-        </div>
+        <RecipeBox
+          recipes={recipes}
+          openTitle={openTitle}
+          onOpen={setOpenTitle}
+          actions={(recipe) => (
+            <>
+              <button
+                type="button"
+                aria-label={`Edit ${recipe.title}`}
+                onClick={() => open(toDraft(recipe), recipe.title)}
+                className={SECONDARY}
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                aria-label={`Delete ${recipe.title}`}
+                onClick={() => {
+                  if (editing === recipe.title) close();
+                  setOpenTitle(null);
+                  deleteMyRecipe(recipe.title);
+                }}
+                className={DANGER}
+              >
+                Delete
+              </button>
+            </>
+          )}
+        />
       )}
     </section>
   );

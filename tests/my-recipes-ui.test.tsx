@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MyRecipes } from "@/components/kitchen/my-recipes";
-import { resetMyRecipes } from "@/lib/my-recipes";
+import { resetMyRecipes, saveMyRecipe } from "@/lib/my-recipes";
 import { renderWithProviders } from "./render-with-providers";
 
 const cookButtons = vi.hoisted(() => [] as Array<{ title: string; archive: boolean | undefined }>);
@@ -74,5 +74,66 @@ describe("My Recipes section", () => {
 
     await user.click(screen.getByRole("button", { name: "Delete Nasi Telur Super Kilat" }));
     expect(screen.getByText(/No recipes of your own yet/)).toBeInTheDocument();
+  });
+});
+
+function seed(minutes: number[]) {
+  // saveMyRecipe prepends, so seed in reverse to read "Recipe 1" first.
+  [...minutes].reverse().forEach((m, i) => {
+    const n = minutes.length - i;
+    saveMyRecipe({ title: `Recipe ${n}`, emoji: "🍲", minutes: m, uses: ["egg"], missing: [], steps: ["Cook."] });
+  });
+}
+
+describe("My Recipes — recipe box", () => {
+  it("files recipes as index cards and opens one full card at a time", async () => {
+    const user = userEvent.setup();
+    seed([10, 25, 60]);
+    renderWithProviders(<MyRecipes />);
+
+    const box = screen.getByRole("list", { name: "Recipe box" });
+    expect(within(box).getAllByRole("listitem")).toHaveLength(3);
+    expect(screen.queryByRole("article")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Recipe 1, 10 min/ }));
+    expect(screen.getByRole("heading", { name: "Recipe 1" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Recipe 2, 25 min/ }));
+    expect(screen.getAllByRole("article")).toHaveLength(1);
+    expect(screen.getByRole("heading", { name: "Recipe 2" })).toBeInTheDocument();
+  });
+
+  it("filters by cooking time", async () => {
+    const user = userEvent.setup();
+    seed([10, 15, 25, 60]);
+    renderWithProviders(<MyRecipes />);
+
+    await user.click(screen.getByRole("radio", { name: /≤15 min/ }));
+    const box = screen.getByRole("list", { name: "Recipe box" });
+    expect(within(box).getAllByRole("listitem").map((li) => li.textContent)).toEqual([
+      expect.stringContaining("Recipe 1"),
+      expect.stringContaining("Recipe 2"),
+    ]);
+    await user.click(screen.getByRole("radio", { name: /30\+ min/ }));
+    expect(within(box).getAllByRole("listitem")).toHaveLength(1);
+  });
+
+  it("adds a search from seven recipes and shows eight cards before Show more", async () => {
+    const user = userEvent.setup();
+    seed(Array.from({ length: 10 }, () => 20));
+    renderWithProviders(<MyRecipes />);
+
+    const box = screen.getByRole("list", { name: "Recipe box" });
+    expect(within(box).getAllByRole("listitem")).toHaveLength(8);
+    await user.click(screen.getByRole("button", { name: /Show more \(2 left\)/ }));
+    expect(within(box).getAllByRole("listitem")).toHaveLength(10);
+
+    await user.type(screen.getByRole("searchbox", { name: "Search your recipes" }), "recipe 10");
+    expect(within(box).getAllByRole("listitem")).toHaveLength(1);
+  });
+
+  it("has no search for a small box", () => {
+    seed([10, 20]);
+    renderWithProviders(<MyRecipes />);
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
   });
 });
