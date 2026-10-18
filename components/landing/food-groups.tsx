@@ -11,7 +11,6 @@ import pantry from "@/public/food/pantry-flatlay.jpg";
 import poke from "@/public/food/poke-bowl.jpg";
 import ramen from "@/public/food/ramen.jpg";
 
-import { IngredientMosaic } from "./ingredient-mosaic";
 import { Magnetic } from "./motion/magnetic";
 import { gsap, SplitText, TOUCH } from "./motion/gsap";
 import { useLandingMotion } from "./motion/use-landing-motion";
@@ -165,8 +164,6 @@ export function LandingFoodGroups() {
             );
           })}
         </ol>
-
-        <IngredientMosaic />
 
         <div data-anim="fade-up" className="mt-12 flex justify-center">
           <Magnetic>

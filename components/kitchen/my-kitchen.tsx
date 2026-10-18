@@ -2,18 +2,13 @@
 
 import { useConnection } from "wagmi";
 
-import { ListSearch, ShowMore } from "@/components/ui/list-controls";
 import { SectionTag } from "@/components/ui/section-tag";
 import { WalletButton } from "@/components/kitchen/wallet-button";
 import { shortenAddress } from "@/lib/address";
 import { contractAddress, explorerAddressUrl } from "@/lib/contract";
 import { useMyKitchen } from "@/lib/queries";
-import { usePagedList } from "@/lib/use-paged-list";
 
 type Status = "no-config" | "disconnected" | "loading" | "empty" | "error" | "ready";
-
-/** Tiles per page — a big kitchen stays one screen until asked for more. */
-const PAGE = 12;
 
 export function MyKitchen() {
   const connection = useConnection();
@@ -24,7 +19,6 @@ export function MyKitchen() {
     isError,
     refetch,
   } = useMyKitchen(connection.address);
-  const list = usePagedList(data ?? [], { size: PAGE, text: (entry) => entry.title });
 
   const status: Status = !contract
     ? "no-config"
@@ -128,17 +122,12 @@ export function MyKitchen() {
               {(data ?? []).length} dish{(data ?? []).length === 1 ? "" : "es"}{" "}
               stamped by {shortenAddress(connection.address ?? "")}
             </p>
-            {list.total > PAGE && (
-              <div className="mb-5">
-                <ListSearch label="Search your kitchen" value={list.query} onChange={list.setQuery} />
-              </div>
-            )}
             <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {list.visible.map((entry, index) => (
+              {(data ?? []).map((entry, index) => (
                 <li
                   key={entry.key}
                   className="card-rise flex flex-col justify-between gap-6 rounded-2xl bg-wheat p-4"
-                  style={{ animationDelay: `${(index % PAGE) * 60}ms` }}
+                  style={{ animationDelay: `${index * 60}ms` }}
                 >
                   <span aria-hidden="true" className="text-5xl leading-none">
                     {entry.emoji}
@@ -154,10 +143,6 @@ export function MyKitchen() {
                 </li>
               ))}
             </ul>
-            {list.matched === 0 && (
-              <p className="text-sm text-brick">No stamped dish matches “{list.query}”.</p>
-            )}
-            {list.hasMore && <ShowMore left={list.matched - list.visible.length} onClick={list.showMore} />}
           </>
         )}
       </div>

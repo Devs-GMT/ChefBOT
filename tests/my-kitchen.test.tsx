@@ -119,28 +119,4 @@ describe("MyKitchen", () => {
     await user.click(screen.getByRole("button", { name: "Try again" }));
     expect(await screen.findByText(/Nothing stamped yet/)).toBeInTheDocument();
   });
-
-  it("shows 12 stamps at a time with Show more and a search for big kitchens", async () => {
-    const user = userEvent.setup();
-    const keys = Array.from({ length: 30 }, (_, i) => `0x${i.toString(16).padStart(2, "0")}` as const);
-    vi.mocked(fetchMyDishKeys).mockResolvedValue(keys);
-    vi.mocked(fetchDish).mockImplementation(async (key) => ({
-      title: `Dish ${parseInt(key.slice(2), 16)}`,
-      emoji: "🍳",
-      cooks: 1,
-    }));
-    mockConnection(true);
-    renderWithProviders(<MyKitchen />);
-
-    expect(await screen.findByText("Dish 0")).toBeInTheDocument();
-    expect(screen.getAllByRole("listitem")).toHaveLength(12);
-    await user.click(screen.getByRole("button", { name: /Show more/ }));
-    expect(screen.getAllByRole("listitem")).toHaveLength(24);
-
-    await user.type(screen.getByRole("searchbox", { name: /Search your kitchen/ }), "dish 2");
-    expect(screen.getAllByRole("listitem").map((li) => li.textContent)).toEqual(
-      expect.arrayContaining([expect.stringContaining("Dish 2")]),
-    );
-    expect(screen.queryByText("Dish 5")).not.toBeInTheDocument();
-  });
 });

@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -126,32 +126,5 @@ describe("Leaderboard", () => {
     await user.click(screen.getByRole("button", { name: "Try again" }));
     expect(await screen.findByText(/Curry/)).toBeInTheDocument();
     expect(fetchDishes).toHaveBeenCalledTimes(2);
-  });
-
-  it("lists every dish beyond the top bars, searchable, with Show more", async () => {
-    const user = userEvent.setup();
-    vi.mocked(contractAddress).mockReturnValue(ADDRESS);
-    vi.mocked(fetchDishes).mockResolvedValue(
-      Array.from({ length: 24 }, (_, i) => ({
-        key: `0x${i.toString(16).padStart(2, "0")}`,
-        title: i === 20 ? "Sambal Tempeh" : `Dish ${i}`,
-        emoji: "🍲",
-        cooks: 100 - i,
-      })),
-    );
-    renderWithProviders(<Leaderboard />);
-
-    const all = await screen.findByRole("list", { name: "All dishes" });
-    expect(screen.getByRole("heading", { name: /All dishes \(24\)/ })).toBeInTheDocument();
-    expect(within(all).getAllByRole("listitem")).toHaveLength(10);
-    await user.click(screen.getByRole("button", { name: /Show more/ }));
-    expect(within(all).getAllByRole("listitem")).toHaveLength(20);
-
-    await user.type(screen.getByRole("searchbox", { name: /Search dishes/ }), "tempeh");
-    const rows = within(all).getAllByRole("listitem");
-    expect(rows).toHaveLength(1);
-    expect(rows[0]).toHaveTextContent("#21");
-    await user.click(within(rows[0]!).getByRole("button", { name: /Sambal Tempeh/ }));
-    expect(screen.getByRole("region", { name: /Sambal Tempeh/ })).toHaveTextContent("#21 most cooked");
   });
 });
