@@ -7,6 +7,7 @@ import { encodeAbiParameters, encodeEventTopics } from "viem";
 import { CookButton } from "@/components/kitchen/cook-button";
 import { chefbotAbi } from "@/lib/abi/ChefBOT";
 import { contractAddress, fetchIsCooked } from "@/lib/contract";
+import { archiveDish } from "@/lib/dish-archive";
 import { recipeKey } from "@/lib/recipe-key";
 import type { Recipe } from "@/shared/recipe-schema";
 import { renderWithProviders } from "./render-with-providers";
@@ -22,6 +23,8 @@ vi.mock("wagmi", async (importOriginal) => {
     useWaitForTransactionReceipt: vi.fn(),
   };
 });
+
+vi.mock("@/lib/dish-archive", () => ({ archiveDish: vi.fn().mockResolvedValue(true) }));
 
 vi.mock("@/lib/contract", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/contract")>();
@@ -182,6 +185,36 @@ describe("CookButton", () => {
     const share = screen.getByRole("link", { name: /Share on X/ });
     expect(share.getAttribute("href")).toContain("https://x.com/intent/post");
     expect(share.getAttribute("href")).toContain("cook+%2314");
+  });
+
+  it("archives the recipe once the stamp is confirmed", async () => {
+    const user = userEvent.setup();
+    mockConnection({ isConnected: true });
+    vi.mocked(useWaitForTransactionReceipt).mockReturnValue({
+      data: { status: "success", logs: [cookedLog(3)] },
+      isError: false,
+      isPending: false,
+    } as never);
+    const { rerender } = renderWithProviders(<CookButton recipe={RECIPE} />);
+    await user.click(screen.getByRole("button", { name: "I cooked it 🍳" }));
+    await screen.findByRole("status");
+    rerender(<CookButton recipe={RECIPE} />);
+    expect(archiveDish).toHaveBeenCalledTimes(1);
+    expect(archiveDish).toHaveBeenCalledWith("0xdeadbeefhash", RECIPE);
+  });
+
+  it("never archives a cook's own (private) recipe", async () => {
+    const user = userEvent.setup();
+    mockConnection({ isConnected: true });
+    vi.mocked(useWaitForTransactionReceipt).mockReturnValue({
+      data: { status: "success", logs: [cookedLog(1)] },
+      isError: false,
+      isPending: false,
+    } as never);
+    renderWithProviders(<CookButton recipe={RECIPE} archive={false} />);
+    await user.click(screen.getByRole("button", { name: "I cooked it 🍳" }));
+    await screen.findByRole("status");
+    expect(archiveDish).not.toHaveBeenCalled();
   });
 
   it("still confirms the stamp when the receipt has no Cooked event", async () => {

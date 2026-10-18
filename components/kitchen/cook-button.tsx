@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   useConnect,
   useConnection,
@@ -14,6 +14,7 @@ import { chefbotAbi } from "@/lib/abi/ChefBOT";
 import { explorerTxUrl } from "@/lib/chain";
 import { contractAddress } from "@/lib/contract";
 import { cookNumberFromLogs, shareOnXUrl } from "@/lib/cooked-event";
+import { archiveDish } from "@/lib/dish-archive";
 import { useIsCooked, useRefreshOnChain } from "@/lib/queries";
 import { validateEmoji, validateTitle } from "@/lib/recipe-key";
 import { targetChainId } from "@/lib/wagmi";
@@ -30,7 +31,14 @@ import type { Recipe } from "@/shared/recipe-schema";
 
 type Phase = "idle" | "wallet" | "pending" | "success" | "error";
 
-export function CookButton({ recipe }: { recipe: Recipe }) {
+export function CookButton({
+  recipe,
+  archive = true,
+}: {
+  recipe: Recipe;
+  /** Post the full recipe to the shared archive after a stamp (off for private recipes). */
+  archive?: boolean;
+}) {
   const connection = useConnection();
   const {
     mutateAsync: connectAsync,
@@ -70,14 +78,20 @@ export function CookButton({ recipe }: { recipe: Recipe }) {
     query: { enabled: txHash !== undefined },
   });
   const receiptStatus = receipt.data?.status;
+  const archivedTx = useRef<string | null>(null);
 
   // Receipt outcomes are derived during render (no setState-in-effect);
   // the only side effect allowed here is invalidating on-chain reads.
   useEffect(() => {
     if (phase === "pending" && receiptStatus === "success") {
       refreshOnChain();
+      // Best effort, once per transaction: lets others open the dish's steps.
+      if (archive && txHash && archivedTx.current !== txHash) {
+        archivedTx.current = txHash;
+        void archiveDish(txHash, recipe);
+      }
     }
-  }, [phase, receiptStatus, refreshOnChain]);
+  }, [phase, receiptStatus, refreshOnChain, archive, txHash, recipe]);
 
   const receiptPhase: Phase | null =
     phase !== "pending"

@@ -4,7 +4,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Leaderboard } from "@/components/kitchen/leaderboard";
 import { contractAddress, fetchDishes } from "@/lib/contract";
+import { fetchArchivedDish } from "@/lib/dish-archive";
 import { renderWithProviders } from "./render-with-providers";
+
+vi.mock("@/lib/dish-archive", () => ({ fetchArchivedDish: vi.fn().mockResolvedValue(null) }));
 
 vi.mock("@/lib/contract", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/contract")>();
@@ -83,6 +86,29 @@ describe("Leaderboard", () => {
     expect(
       screen.getByRole("region", { name: /Mystery Stew/ }),
     ).toHaveTextContent(/steps stay in the app/i);
+  });
+
+  it("shows archived steps for dishes that are not in the cookbook", async () => {
+    const user = userEvent.setup();
+    vi.mocked(contractAddress).mockReturnValue(ADDRESS);
+    vi.mocked(fetchDishes).mockResolvedValue([
+      { key: "0x02", title: "Mystery Stew", emoji: "🍲", cooks: 2 },
+    ]);
+    vi.mocked(fetchArchivedDish).mockResolvedValueOnce({
+      title: "Mystery Stew",
+      emoji: "🍲",
+      minutes: 25,
+      uses: [],
+      missing: [],
+      steps: ["Brown the onions.", "Simmer everything."],
+    });
+    renderWithProviders(<Leaderboard />);
+
+    await user.click(await screen.findByRole("button", { name: /Mystery Stew, 2 cooks/ }));
+    const steps = await screen.findByRole("list", { name: "Steps" });
+    expect(steps).toHaveTextContent("Simmer everything.");
+    expect(screen.getByRole("region", { name: /Mystery Stew/ })).toHaveTextContent("25 min");
+    expect(fetchArchivedDish).toHaveBeenCalledWith("Mystery Stew");
   });
 
   it("shows an error state with a working retry", async () => {

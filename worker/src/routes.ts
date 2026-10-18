@@ -1,5 +1,6 @@
 import type { WorkerEnv } from "./env";
 import type { HeaderMap } from "./lib/http";
+import { handleGetDish, handlePostDish } from "./routes/dishes";
 import { handleRecipes } from "./routes/recipes";
 import { notImplemented } from "./routes/reserved";
 import { handleScan } from "./routes/scan";
@@ -23,6 +24,9 @@ export const ROUTES: Route[] = [
   // ChefBOT
   { method: "POST", path: "/recipes", handler: handleRecipes, limited: true },
   { method: "POST", path: "/scan", handler: handleScan, limited: true },
+  // Recipe archive: writes are proven by a stamp tx; reads feed the leaderboard.
+  { method: "POST", path: "/dishes", handler: handlePostDish, limited: true },
+  { method: "GET", path: "/dishes", handler: handleGetDish, limited: false },
   // GitAura — reserved until specified
   { method: "GET", path: "/auth/github/login", handler: notImplemented, limited: true },
   { method: "GET", path: "/auth/github/callback", handler: notImplemented, limited: true },

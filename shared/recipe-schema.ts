@@ -233,87 +233,93 @@ export function validateRecipesResponse(
   const seenTitles = new Set<string>();
 
   for (const [index, raw] of data.recipes.entries()) {
-    if (!isPlainObject(raw)) {
-      return { ok: false, reason: `recipes[${index}]: not an object` };
-    }
-
-    if (typeof raw.title !== "string") {
-      return { ok: false, reason: `recipes[${index}].title: not a string` };
-    }
-    const title = trimTitle(raw.title);
-    if (title.length === 0) {
-      return { ok: false, reason: `recipes[${index}].title: empty` };
-    }
-    if (byteLength(title) > MAX_TITLE_BYTES) {
-      return {
-        ok: false,
-        reason: `recipes[${index}].title: exceeds ${MAX_TITLE_BYTES} bytes`,
-      };
-    }
-    const normalized = normalizeTitle(title);
+    const field = `recipes[${index}]`;
+    const result = validateRecipe(raw, { maxMinutes, picked, field });
+    if (!result.ok) return result;
+    const normalized = normalizeTitle(result.value.title);
     if (seenTitles.has(normalized)) {
-      return {
-        ok: false,
-        reason: `recipes[${index}].title: duplicate recipe key`,
-      };
+      return { ok: false, reason: `${field}.title: duplicate recipe key` };
     }
     seenTitles.add(normalized);
-
-    if (typeof raw.emoji !== "string" || raw.emoji.trim().length === 0) {
-      return { ok: false, reason: `recipes[${index}].emoji: missing` };
-    }
-    const emoji = raw.emoji.trim();
-    if (byteLength(emoji) > MAX_EMOJI_BYTES) {
-      return {
-        ok: false,
-        reason: `recipes[${index}].emoji: exceeds ${MAX_EMOJI_BYTES} bytes`,
-      };
-    }
-
-    if (typeof raw.minutes !== "number" || !Number.isInteger(raw.minutes)) {
-      return { ok: false, reason: `recipes[${index}].minutes: not an integer` };
-    }
-    if (raw.minutes < 1 || raw.minutes > maxMinutes) {
-      return {
-        ok: false,
-        reason: `recipes[${index}].minutes: ${raw.minutes} outside 1..${maxMinutes}`,
-      };
-    }
-
-    const usesResult = validateStringArray(raw.uses, `recipes[${index}].uses`, {
-      min: 0,
-      max: MAX_INGREDIENTS,
-      maxLength: MAX_INGREDIENT_LENGTH,
-    });
-    if (!usesResult.ok) return usesResult;
-
-    const missingResult = validateStringArray(
-      raw.missing,
-      `recipes[${index}].missing`,
-      { min: 0, max: MAX_INGREDIENTS, maxLength: MAX_INGREDIENT_LENGTH },
-    );
-    if (!missingResult.ok) return missingResult;
-
-    const stepsResult = validateStringArray(raw.steps, `recipes[${index}].steps`, {
-      min: 1,
-      max: MAX_STEPS,
-      maxLength: MAX_STEP_LENGTH,
-    });
-    if (!stepsResult.ok) return stepsResult;
-
-    recipes.push({
-      title,
-      emoji,
-      minutes: raw.minutes,
-      uses: picked
-        ? [...new Set(usesResult.value.map((id) => id.toLowerCase()))].filter((id) => picked.has(id))
-        : usesResult.value,
-      missing: missingResult.value,
-      steps: stepsResult.value,
-    });
-    const nutrition = parseNutrition(raw.nutrition);
-    if (nutrition) recipes[recipes.length - 1]!.nutrition = nutrition;
+    recipes.push(result.value);
   }
 
   return { ok: true, value: { recipes } };
+}
+
+/**
+ * Validate one recipe (AI output, an archived dish, or a cook's own recipe).
+ * `picked` keeps `uses` to the cook's selection; `field` prefixes reasons.
+ */
+export function validateRecipe(
+  raw: unknown,
+  opts: { maxMinutes?: number; picked?: ReadonlySet<string> | null; field?: string } = {},
+): ValidationResult<Recipe> {
+  const maxMinutes = opts.maxMinutes ?? 30;
+  const picked = opts.picked ?? null;
+  const field = opts.field ?? "recipe";
+  if (!isPlainObject(raw)) {
+    return { ok: false, reason: `${field}: not an object` };
+  }
+
+  if (typeof raw.title !== "string") {
+    return { ok: false, reason: `${field}.title: not a string` };
+  }
+  const title = trimTitle(raw.title);
+  if (title.length === 0) {
+    return { ok: false, reason: `${field}.title: empty` };
+  }
+  if (byteLength(title) > MAX_TITLE_BYTES) {
+    return { ok: false, reason: `${field}.title: exceeds ${MAX_TITLE_BYTES} bytes` };
+  }
+
+  if (typeof raw.emoji !== "string" || raw.emoji.trim().length === 0) {
+    return { ok: false, reason: `${field}.emoji: missing` };
+  }
+  const emoji = raw.emoji.trim();
+  if (byteLength(emoji) > MAX_EMOJI_BYTES) {
+    return { ok: false, reason: `${field}.emoji: exceeds ${MAX_EMOJI_BYTES} bytes` };
+  }
+
+  if (typeof raw.minutes !== "number" || !Number.isInteger(raw.minutes)) {
+    return { ok: false, reason: `${field}.minutes: not an integer` };
+  }
+  if (raw.minutes < 1 || raw.minutes > maxMinutes) {
+    return { ok: false, reason: `${field}.minutes: ${raw.minutes} outside 1..${maxMinutes}` };
+  }
+
+  const usesResult = validateStringArray(raw.uses, `${field}.uses`, {
+    min: 0,
+    max: MAX_INGREDIENTS,
+    maxLength: MAX_INGREDIENT_LENGTH,
+  });
+  if (!usesResult.ok) return usesResult;
+
+  const missingResult = validateStringArray(raw.missing, `${field}.missing`, {
+    min: 0,
+    max: MAX_INGREDIENTS,
+    maxLength: MAX_INGREDIENT_LENGTH,
+  });
+  if (!missingResult.ok) return missingResult;
+
+  const stepsResult = validateStringArray(raw.steps, `${field}.steps`, {
+    min: 1,
+    max: MAX_STEPS,
+    maxLength: MAX_STEP_LENGTH,
+  });
+  if (!stepsResult.ok) return stepsResult;
+
+  const recipe: Recipe = {
+    title,
+    emoji,
+    minutes: raw.minutes,
+    uses: picked
+      ? [...new Set(usesResult.value.map((id) => id.toLowerCase()))].filter((id) => picked.has(id))
+      : usesResult.value,
+    missing: missingResult.value,
+    steps: stepsResult.value,
+  };
+  const nutrition = parseNutrition(raw.nutrition);
+  if (nutrition) recipe.nutrition = nutrition;
+  return { ok: true, value: recipe };
 }

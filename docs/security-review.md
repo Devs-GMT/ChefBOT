@@ -19,6 +19,7 @@ accepted risks with remediation paths. Performed by the coding agent,
 | B3 | LLM output → response → UI | model JSON (never trusted) | inbound |
 | B4 | Browser → BOT Chain RPC / wallet | chain data, user signatures | both |
 | B5 | Repo → runtime (env, git history) | leaked secrets | inbound |
+| B7 | Browser → Worker `POST /dishes` (v1.1 archive) | recipe JSON ≤8 KB validated by the shared `validateRecipe`; `txHash` format-checked; stored only if `eth_getTransactionReceipt` on `CHAIN_RPC_URL` shows status 1 and a `Cooked` log from `CHEFBOT_CONTRACT_ADDRESS` whose title normalises to the posted one; first writer wins (no overwrite); rate-limited; recipe text only ever rendered as React text. `GET /dishes` is read-only, unthrottled, cacheable, never returns the tx hash | inbound |
 | B6 | Browser → Worker `POST /scan` (v1.1) | base64 photo ≤1 MB (body ≤1.5 MB), declared mime checked against magic bytes (JPEG/PNG/WebP only, no SVG); output locked to a vocabulary `enum` and re-filtered, so text inside a photo cannot steer it; photo never stored or logged; same per-IP budget; user consent before first upload | inbound |
 
 ### Assets

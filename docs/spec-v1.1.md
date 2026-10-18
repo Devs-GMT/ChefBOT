@@ -109,3 +109,14 @@ TDD per slice, with unit and component tests in Vitest, mocking Gemini and `fetc
 ## Open questions
 1. Should the shopping list get its own nav tab, or be a panel under My Kitchen? (Default: its own tab, "List".)
 2. Is the 20 per IP per hour budget shared between `/recipes` and `/scan` OK? (Default: yes, shared.)
+
+## Addendum (2026-10-18) — PRD §9 follow-ups chosen by the owner
+
+| Module id | User story |
+|---|---|
+| `dish-archive` | As anyone browsing Most Cooked, I tap an AI-made dish and see its real steps, not just the on-chain title. |
+| `my-recipes` | As a cook, I write my own recipe, keep it in this browser, and can stamp it like any other dish. |
+
+- Archive writes need proof: the stamp transaction's receipt must contain the contract's `Cooked` event for that title. First writer wins. Own recipes are never archived.
+- My recipes stay in localStorage only (no account, no sharing); stamping puts only title + emoji on-chain.
+- Not doing: comments, payments (moderation/money); NFT badges wait for the mainnet launch.

@@ -6,6 +6,12 @@ import type { DurableObjectNamespaceLike } from "./lib/rate-limit";
  * GitAura auth/attest secrets are typed here so the shape is fixed, and are
  * unused until those routes are specified.
  */
+/** The slice of the Workers KV API the archive uses. */
+export interface KvLike {
+  get(key: string): Promise<string | null>;
+  put(key: string, value: string): Promise<void>;
+}
+
 export interface WorkerEnv {
   /** Google Gemini key — `wrangler secret put GEMINI_API_KEY`. */
   GEMINI_API_KEY?: string;
@@ -23,6 +29,13 @@ export interface WorkerEnv {
   RATE_LIMIT_PER_HOUR?: string;
   /** Durable Object namespace backing the per-IP hourly limiter. */
   RATE_LIMITER?: DurableObjectNamespaceLike;
+
+  /** Recipe archive (KV): `dish:<normalized title>` → stamped recipe JSON. */
+  DISHES?: KvLike;
+  /** BOT Chain JSON-RPC endpoint used to prove a stamp before archiving. */
+  CHAIN_RPC_URL?: string;
+  /** The ChefBOT contract whose `Cooked` events count as proof. */
+  CHEFBOT_CONTRACT_ADDRESS?: string;
 
   // Reserved for the GitAura routes (not used yet).
   GITHUB_CLIENT_ID?: string;

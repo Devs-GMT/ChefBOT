@@ -1,9 +1,11 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { SectionTag } from "@/components/ui/section-tag";
 import { contractAddress, explorerAddressUrl, type DishEntry } from "@/lib/contract";
+import { fetchArchivedDish } from "@/lib/dish-archive";
 import { findCuratedRecipe } from "@/lib/fallback";
 import { useDishes } from "@/lib/queries";
 
@@ -226,6 +228,14 @@ export function Leaderboard() {
 
 function DishDetail({ dish, rank }: { dish: DishEntry; rank: number }) {
   const curated = findCuratedRecipe(dish.title);
+  // AI-made dishes: steps come from the stamp-proven archive, if any.
+  const archived = useQuery({
+    queryKey: ["chefbot", "archive", dish.title],
+    queryFn: () => fetchArchivedDish(dish.title),
+    enabled: !curated,
+    staleTime: 5 * 60_000,
+  });
+  const known = curated ?? archived.data ?? null;
   return (
     <section
       id="dish-detail"
@@ -246,11 +256,11 @@ function DishDetail({ dish, rank }: { dish: DishEntry; rank: number }) {
         </h3>
         <p className="mt-1 text-sm text-brick">
           Stamped {dish.cooks} time{dish.cooks === 1 ? "" : "s"} on BOT Chain
-          {curated ? ` · ${curated.minutes} min` : ""}
+          {known ? ` · ${known.minutes} min` : ""}
         </p>
-        {curated ? (
+        {known ? (
           <ol aria-label="Steps" className="mt-4 space-y-2">
-            {curated.steps.map((step, index) => (
+            {known.steps.map((step, index) => (
               <li key={index} className="flex gap-3 text-[15px] leading-[1.45] text-ink">
                 <span
                   aria-hidden="true"
@@ -262,6 +272,8 @@ function DishDetail({ dish, rank }: { dish: DishEntry; rank: number }) {
               </li>
             ))}
           </ol>
+        ) : archived.isPending && !curated ? (
+          <p className="mt-4 text-sm text-brick">Looking up the recipe…</p>
         ) : (
           <p className="mt-4 max-w-lg text-[15px] leading-[1.45] text-ink">
             Only the title and emoji live on-chain — the steps stay in the app

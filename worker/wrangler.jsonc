@@ -11,7 +11,11 @@
     // Add the production site (Vercel URL + custom domain) before `wrangler deploy`.
     "CORS_ALLOWED_ORIGINS": "http://localhost:3000,http://127.0.0.1:3000",
     "RATE_LIMIT_PER_HOUR": "20",
-    "GEMINI_MODEL": "gemini-3.5-flash-lite"
+    "GEMINI_MODEL": "gemini-3.5-flash-lite",
+    // Recipe archive proof: a POST /dishes must cite a tx whose receipt has
+    // this contract's Cooked event. Switch both to mainnet (677) at launch.
+    "CHAIN_RPC_URL": "https://rpc.bohr.life",
+    "CHEFBOT_CONTRACT_ADDRESS": "0x939878F4aA5564B91aFa1e8758A100F14AAbcB85"
     // Optional: "GEMINI_THINKING_LEVEL": "minimal" (verify against the live API first).
     // Optional: "GEMINI_SCAN_MODEL" / "GEMINI_SCAN_THINKING_LEVEL" for POST /scan only.
     // Measured 2026-10-18 (npm run eval:scan): gemini-3.5-flash on the free tier hit
@@ -23,6 +27,9 @@
     "bindings": [{ "name": "RATE_LIMITER", "class_name": "RateLimiter" }]
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["RateLimiter"] }],
+  // Recipe archive. No id: `wrangler deploy` provisions the namespace on
+  // first deploy; `wrangler dev` uses a local one.
+  "kv_namespaces": [{ "binding": "DISHES" }],
   "observability": {
     "enabled": true
   }
