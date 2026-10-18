@@ -3,6 +3,10 @@
   "name": "chefbot-recipes",
   "main": "src/index.ts",
   "compatibility_date": "2026-10-01",
+  // Public URL: https://chefbot-recipes.<account>.workers.dev. Preview URLs are
+  // off — Cloudflare does not serve them for Workers with a Durable Object.
+  "workers_dev": true,
+  "preview_urls": false,
   "vars": {
     // Add the production site (Vercel URL + custom domain) before `wrangler deploy`.
     "CORS_ALLOWED_ORIGINS": "http://localhost:3000,http://127.0.0.1:3000",
