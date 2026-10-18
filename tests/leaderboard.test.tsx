@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -45,8 +45,8 @@ describe("Leaderboard", () => {
     renderWithProviders(<Leaderboard />);
     expect(await screen.findByText(/Ramen/)).toBeInTheDocument();
     expect(screen.getByText(/Fried Rice/)).toBeInTheDocument();
-    expect(screen.getByText("5 cooks")).toBeInTheDocument();
-    expect(screen.getByText("3 cooks")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Ramen, 5 cooks" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Fried Rice, 3 cooks" })).toBeInTheDocument();
 
     const items = screen.getAllByRole("listitem");
     expect(items[0]).toHaveTextContent("Ramen");
@@ -126,5 +126,62 @@ describe("Leaderboard", () => {
     await user.click(screen.getByRole("button", { name: "Try again" }));
     expect(await screen.findByText(/Curry/)).toBeInTheDocument();
     expect(fetchDishes).toHaveBeenCalledTimes(2);
+  });
+});
+
+function manyDishes(count: number) {
+  return Array.from({ length: count }, (_, i) => ({
+    key: `0x${(i + 1).toString(16).padStart(2, "0")}` as const,
+    title: `Dish ${i + 1}`,
+    emoji: "🍲",
+    cooks: count - i,
+  }));
+}
+
+describe("Leaderboard — podium and ladder", () => {
+  it("puts the top three on a podium (#2, #1, #3 left to right) and the rest on the ladder", async () => {
+    vi.mocked(contractAddress).mockReturnValue(ADDRESS);
+    vi.mocked(fetchDishes).mockResolvedValue(manyDishes(6));
+    renderWithProviders(<Leaderboard />);
+
+    const podium = await screen.findByRole("list", { name: "Top 3" });
+    const steps = within(podium).getAllByRole("listitem");
+    expect(steps.map((li) => li.dataset.rank)).toEqual(["1", "2", "3"]);
+    expect(steps.map((li) => li.style.order)).toEqual(["2", "1", "3"]);
+    expect(steps[0]).toHaveTextContent("Dish 1");
+
+    const ladder = screen.getByRole("list", { name: "Rank 4 and below" });
+    const rows = within(ladder).getAllByRole("listitem");
+    expect(rows).toHaveLength(3);
+    expect(rows[0]).toHaveTextContent("#4");
+    expect(rows[0]).toHaveTextContent("Dish 4");
+  });
+
+  it("shows eight ladder rows, then more on demand, with a search for long lists", async () => {
+    const user = userEvent.setup();
+    vi.mocked(contractAddress).mockReturnValue(ADDRESS);
+    vi.mocked(fetchDishes).mockResolvedValue(manyDishes(30));
+    renderWithProviders(<Leaderboard />);
+
+    const ladder = await screen.findByRole("list", { name: "Rank 4 and below" });
+    expect(within(ladder).getAllByRole("listitem")).toHaveLength(8);
+    await user.click(screen.getByRole("button", { name: /Show more \(19 left\)/ }));
+    expect(within(ladder).getAllByRole("listitem")).toHaveLength(16);
+
+    await user.type(screen.getByRole("searchbox", { name: "Find a dish" }), "dish 2");
+    const found = within(ladder).getAllByRole("listitem");
+    // Dish 2 sits on the podium; the ladder lists Dish 20–29 with their real ranks.
+    expect(found).toHaveLength(8);
+    expect(found[0]).toHaveTextContent("#20");
+  });
+
+  it("opens a ladder dish when its row is tapped", async () => {
+    const user = userEvent.setup();
+    vi.mocked(contractAddress).mockReturnValue(ADDRESS);
+    vi.mocked(fetchDishes).mockResolvedValue(manyDishes(5));
+    renderWithProviders(<Leaderboard />);
+
+    await user.click(await screen.findByRole("button", { name: /Dish 5, 1 cook$/ }));
+    expect(screen.getByRole("region", { name: "Dish 5" })).toHaveTextContent("#5 most cooked");
   });
 });

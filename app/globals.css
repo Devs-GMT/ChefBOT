@@ -185,6 +185,67 @@ body {
   animation: stamp-pop 520ms cubic-bezier(0.34, 1.4, 0.64, 1) both;
 }
 
+/* Leaderboard podium: the dish hops onto its step after the bar grows. */
+@keyframes podium-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  70% {
+    opacity: 1;
+    transform: translateY(-6px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.podium-pop {
+  animation: podium-pop 640ms cubic-bezier(0.34, 1.4, 0.64, 1) 300ms both;
+}
+
+/* Passport stamps land like a rubber stamp: big, then pressed flat. Each
+   stamp's resting tilt comes from --tilt. */
+@keyframes stamp-thunk {
+  0% {
+    opacity: 0;
+    transform: scale(1.6) rotate(calc(var(--tilt, 0deg) - 12deg));
+  }
+
+  60% {
+    opacity: 1;
+    transform: scale(0.94) rotate(var(--tilt, 0deg));
+  }
+
+  100% {
+    transform: scale(1) rotate(var(--tilt, 0deg));
+  }
+}
+
+.stamp-thunk {
+  transform: rotate(var(--tilt, 0deg));
+  animation: stamp-thunk 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Shopping receipt: zig-zag tear on the top and bottom edges. */
+.receipt-edge {
+  --tooth: 10px;
+  mask:
+    conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / var(--tooth) 51% repeat-x,
+    conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) top / var(--tooth) 51% repeat-x;
+}
+
+/* Recipe box index card: faint ruled lines under the title row. */
+.index-ruled {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0 23px,
+    color-mix(in srgb, var(--color-alert) 18%, transparent) 23px 24px
+  );
+}
+
 /* ---------- Landing motion (GSAP — components/landing/motion) ---------- */
 
 /*

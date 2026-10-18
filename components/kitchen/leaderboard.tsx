@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
+import { Ladder, Podium, type RankedDish } from "@/components/kitchen/leaderboard-chart";
 import { SectionTag } from "@/components/ui/section-tag";
 import { contractAddress, explorerAddressUrl, type DishEntry } from "@/lib/contract";
 import { fetchArchivedDish } from "@/lib/dish-archive";
@@ -11,17 +12,10 @@ import { useDishes } from "@/lib/queries";
 
 type Status = "loading" | "ready" | "empty" | "error" | "no-config";
 
-/** Bars shown at once — the chart stays legible on a phone. */
-const TOP = 8;
-
-function cooksLabel(cooks: number) {
-  return `${cooks} cook${cooks === 1 ? "" : "s"}`;
-}
-
 /**
- * "Most cooked" (PRD §2/§6): realfood.gov-style data moment — tall red bars
- * whose height is the on-chain cook count, the count set huge inside each
- * bar, the dish under it. Tapping a bar opens the dish.
+ * "Most cooked" (PRD §2/§6): the top three stand on a red podium with their
+ * on-chain cook counts set huge; everyone else climbs a ranked ladder with
+ * bars scaled to the leader. Tapping any dish opens it.
  */
 export function Leaderboard() {
   const address = contractAddress();
@@ -38,12 +32,13 @@ export function Leaderboard() {
           ? "empty"
           : "ready";
 
-  const dishes: DishEntry[] = data ?? [];
-  const sorted = [...dishes].sort((a, b) => b.cooks - a.cooks).slice(0, TOP);
-  const maxCooks = Math.max(1, sorted[0]?.cooks ?? 1);
-  const totalCooks = dishes.reduce((sum, dish) => sum + dish.cooks, 0);
-  const openIndex = sorted.findIndex((dish) => dish.key === openKey);
-  const open = openIndex >= 0 ? sorted[openIndex] : undefined;
+  const ranked: RankedDish[] = [...(data ?? [])]
+    .sort((a, b) => b.cooks - a.cooks)
+    .map((dish, index) => ({ ...dish, rank: index + 1 }));
+  const maxCooks = Math.max(1, ranked[0]?.cooks ?? 1);
+  const totalCooks = ranked.reduce((sum, dish) => sum + dish.cooks, 0);
+  const open = ranked.find((dish) => dish.key === openKey);
+  const toggle = (key: string) => setOpenKey((current) => (current === key ? null : key));
 
   return (
     <section
@@ -145,66 +140,26 @@ export function Leaderboard() {
           <>
             <div className="mb-6 flex flex-wrap items-baseline justify-between gap-2 border-b border-fog pb-4">
               <p className="font-mono text-xs tracking-[0.06em] text-ink uppercase">
-                Top {sorted.length} · {dishes.length} dish
-                {dishes.length === 1 ? "" : "es"} on-chain
+                {ranked.length} dish{ranked.length === 1 ? "" : "es"} on-chain
               </p>
               <p className="font-mono text-xs tracking-[0.06em] text-alert uppercase tabular-nums">
                 {totalCooks} total stamps
               </p>
             </div>
 
-            <ol className="-mx-4 flex items-end gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:gap-4 sm:px-0">
-              {sorted.map((dish, index) => {
-                const isOpen = dish.key === openKey;
-                const height = Math.max(14, Math.round((dish.cooks / maxCooks) * 100));
-                return (
-                  <li
-                    key={dish.key}
-                    className="flex min-w-[96px] max-w-[180px] flex-1 flex-col sm:min-w-[110px]"
-                  >
-                    <button
-                      type="button"
-                      aria-expanded={isOpen}
-                      aria-controls="dish-detail"
-                      aria-label={`${dish.title}, ${cooksLabel(dish.cooks)}`}
-                      onClick={() => setOpenKey(isOpen ? null : dish.key)}
-                      className="group flex h-56 flex-col justify-end sm:h-72"
-                    >
-                      <span
-                        className={`bar-grow relative flex w-full flex-col justify-between overflow-hidden rounded-t-xl p-3 text-left text-white transition-[background-color,filter] ${
-                          isOpen ? "bg-ink" : "bg-alert group-hover:brightness-110"
-                        }`}
-                        style={{
-                          height: `${height}%`,
-                          animationDelay: `${index * 80}ms`,
-                        }}
-                      >
-                        <span
-                          aria-hidden="true"
-                          className="text-[clamp(2rem,5vw,64px)] leading-[0.84] font-bold tracking-[-0.03em] tabular-nums"
-                        >
-                          {dish.cooks}
-                        </span>
-                        <span aria-hidden="true" className="text-2xl">
-                          {dish.emoji}
-                        </span>
-                      </span>
-                    </button>
-                    <div className="mt-3 border-t-2 border-ink pt-2">
-                      <p className="font-mono text-[11px] tracking-[0.06em] text-brick tabular-nums">
-                        #{index + 1}
-                      </p>
-                      <p className="mt-0.5 line-clamp-2 text-sm leading-tight font-medium text-ink">
-                        {dish.title}
-                      </p>
-                      <p className="mt-0.5 text-xs text-alert">{cooksLabel(dish.cooks)}</p>
-                    </div>
-                  </li>
-                );
-              })}
-            </ol>
+            <Podium dishes={ranked.slice(0, 3)} openKey={openKey} onToggle={toggle} />
+            <div aria-hidden="true" className="h-2 rounded-b-md bg-ink" />
+            {open && open.rank <= 3 && <DishDetail dish={open} rank={open.rank} />}
 
-            {open && <DishDetail dish={open} rank={openIndex + 1} />}
+            {ranked.length > 3 && (
+              <Ladder
+                dishes={ranked.slice(3)}
+                maxCooks={maxCooks}
+                openKey={openKey}
+                onToggle={toggle}
+              />
+            )}
+            {open && open.rank > 3 && <DishDetail dish={open} rank={open.rank} />}
           </>
         )}
       </div>
