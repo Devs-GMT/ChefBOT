@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef, type CSSProperties } from "react";
 
+import { InlineScript } from "@/components/ui/inline-script";
 import greens from "@/public/food/greens.jpg";
 import poke from "@/public/food/poke-bowl.jpg";
 import riceSkillet from "@/public/food/rice-skillet.jpg";
@@ -13,6 +14,7 @@ import {
   INTRO_DONE_EVENT,
   INTRO_REVEAL_EVENT,
   INTRO_SEEN_KEY,
+  introElapsedMs,
   isLiteDevice,
   PREPAINT_SCRIPT,
   shouldPlayIntro,
@@ -58,6 +60,7 @@ export function IntroCurtain() {
     const reduced = !window.matchMedia(MOTION_OK).matches;
 
     // Client-side navigation never runs the inline script — mirror it here.
+    let readded = false;
     if (!reduced) {
       root.classList.add("motion");
       let seen = false;
@@ -69,12 +72,24 @@ export function IntroCurtain() {
       const lite = isLiteDevice(navigator as Navigator & { deviceMemory?: number });
       if (shouldPlayIntro({ seen, reduced, lite }) && !root.classList.contains("intro-active")) {
         root.classList.add("intro-active");
+        readded = true;
       }
     }
     root.classList.add("motion-ready");
 
     if (!node || !root.classList.contains("intro-active")) {
       return () => root.classList.remove("motion", "motion-ready", "intro-active");
+    }
+
+    // Dev only: Strict Mode's remount resets <html>'s classes, so re-adding
+    // them restarts the CSS opening (a second intro). Continue where it was.
+    // A stale start (client navigation back to a half-played intro) is
+    // ignored: that intro plays from the top.
+    const elapsed = introElapsedMs(performance.now());
+    if (readded && elapsed > 50 && elapsed < 5000) {
+      for (const anim of node.getAnimations({ subtree: true })) {
+        anim.currentTime = elapsed;
+      }
     }
 
     window.scrollTo(0, 0);
@@ -271,7 +286,7 @@ export function IntroCurtain() {
 
   return (
     <>
-      <script dangerouslySetInnerHTML={{ __html: PREPAINT_SCRIPT }} />
+      <InlineScript html={PREPAINT_SCRIPT} />
       {/* Inline display:none until globals.css (with !important) shows it. */}
       <div ref={overlay} className="intro-overlay" aria-hidden="true" style={{ display: "none" }}>
         <div data-intro-bg className="absolute inset-0 bg-[#066742]" />

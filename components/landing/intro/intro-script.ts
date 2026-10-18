@@ -47,7 +47,19 @@ export function shouldPlayIntro({
   return !seen && !reduced && !lite;
 }
 
-export const PREPAINT_SCRIPT = `(function(){try{var d=document.documentElement;if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;d.classList.add("motion");var seen=false;try{seen=!!sessionStorage.getItem(${JSON.stringify(INTRO_SEEN_KEY)})}catch(e){}var n=navigator,c=n.connection,lite=!!(c&&c.saveData)||(typeof n.deviceMemory==="number"&&n.deviceMemory<=2);if(!seen&&!lite)d.classList.add("intro-active");setTimeout(function(){if(!d.classList.contains("motion-ready")){d.classList.remove("motion");d.classList.remove("intro-active")}},${MOTION_FALLBACK_MS})}catch(e){}})();`;
+export const PREPAINT_SCRIPT = `(function(){try{var d=document.documentElement;if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;d.classList.add("motion");var seen=false;try{seen=!!sessionStorage.getItem(${JSON.stringify(INTRO_SEEN_KEY)})}catch(e){}var n=navigator,c=n.connection,lite=!!(c&&c.saveData)||(typeof n.deviceMemory==="number"&&n.deviceMemory<=2);if(!seen&&!lite){d.classList.add("intro-active");window.__chefbotIntroT0=performance.now()}setTimeout(function(){if(!d.classList.contains("motion-ready")){d.classList.remove("motion");d.classList.remove("intro-active")}},${MOTION_FALLBACK_MS})}catch(e){}})();`;
+
+/**
+ * How long the intro has been playing (ms), from the start time the prepaint
+ * script records. In development, React Strict Mode remounts the page and
+ * resets <html>'s classes; when the curtain re-adds them its CSS animations
+ * would restart from zero (a second intro). Seeking them by this amount
+ * resumes instead. 0 when the prepaint script did not run.
+ */
+export function introElapsedMs(now: number): number {
+  const t0 = (window as { __chefbotIntroT0?: number }).__chefbotIntroT0;
+  return typeof t0 === "number" ? Math.max(0, now - t0) : 0;
+}
 
 export interface IntroChar {
   ch: string;

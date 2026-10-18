@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   afterIntro,
+  introElapsedMs,
   INTRO_DONE_EVENT,
   INTRO_SEEN_KEY,
   isLiteDevice,
@@ -67,6 +68,12 @@ describe("PREPAINT_SCRIPT", () => {
     vi.useRealTimers();
     vi.unstubAllGlobals();
     root.className = "";
+  });
+
+  it("records when the intro started, so a dev remount can resume instead of restarting", () => {
+    delete (window as { __chefbotIntroT0?: number }).__chefbotIntroT0;
+    run(false);
+    expect(typeof (window as { __chefbotIntroT0?: number }).__chefbotIntroT0).toBe("number");
   });
 
   it("enables motion and the intro on a first visit", () => {
@@ -168,5 +175,25 @@ describe("afterIntro", () => {
     cancel();
     window.dispatchEvent(new Event(INTRO_DONE_EVENT));
     expect(run).not.toHaveBeenCalled();
+  });
+});
+
+describe("introElapsedMs", () => {
+  beforeEach(() => {
+    delete (window as { __chefbotIntroT0?: number }).__chefbotIntroT0;
+  });
+
+  afterEach(() => {
+    delete (window as { __chefbotIntroT0?: number }).__chefbotIntroT0;
+  });
+
+  it("is 0 when the prepaint script never ran", () => {
+    expect(introElapsedMs(5000)).toBe(0);
+  });
+
+  it("measures from the recorded start", () => {
+    (window as { __chefbotIntroT0?: number }).__chefbotIntroT0 = 1200;
+    expect(introElapsedMs(2000)).toBe(800);
+    expect(introElapsedMs(1000)).toBe(0);
   });
 });
