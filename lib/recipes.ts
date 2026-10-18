@@ -44,14 +44,21 @@ function toErrorName(error: unknown): string {
  * violation — degrades to the local curated fallback instead of failing
  * the user flow.
  */
+export interface GetRecipesOptions {
+  /** Titles already shown for these picks; the fallback skips them. */
+  exclude?: readonly string[];
+  fetchImpl?: typeof fetch;
+}
+
 export async function getRecipes(
   request: RecipeRequest,
-  fetchImpl: typeof fetch = fetch,
+  { exclude = [], fetchImpl = fetch }: GetRecipesOptions = {},
 ): Promise<RecipeResult> {
+  const fallback = () => selectFallbackRecipes(request, 3, exclude);
   const base = apiBase();
   if (!base) {
     return {
-      recipes: selectFallbackRecipes(request),
+      recipes: fallback(),
       source: "fallback",
       fallbackReason: "not_configured",
     };
@@ -70,7 +77,7 @@ export async function getRecipes(
 
     if (!response.ok) {
       return {
-        recipes: selectFallbackRecipes(request),
+        recipes: fallback(),
         source: "fallback",
         fallbackReason: "http_error",
       };
@@ -81,7 +88,7 @@ export async function getRecipes(
       payload = await response.json();
     } catch {
       return {
-        recipes: selectFallbackRecipes(request),
+        recipes: fallback(),
         source: "fallback",
         fallbackReason: "invalid_response",
       };
@@ -93,7 +100,7 @@ export async function getRecipes(
     });
     if (!validated.ok) {
       return {
-        recipes: selectFallbackRecipes(request),
+        recipes: fallback(),
         source: "fallback",
         fallbackReason: "invalid_response",
       };
@@ -104,7 +111,7 @@ export async function getRecipes(
     const name = toErrorName(error);
     const isAbort = name === "AbortError" || name === "TimeoutError";
     return {
-      recipes: selectFallbackRecipes(request),
+      recipes: fallback(),
       source: "fallback",
       fallbackReason: isAbort ? "timeout" : "network",
     };

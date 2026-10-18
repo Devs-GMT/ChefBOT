@@ -23,6 +23,8 @@ export const MIN_INGREDIENTS = 2;
 export const MAX_INGREDIENT_LENGTH = 40;
 export const MAX_STEP_LENGTH = 300;
 export const ALLOWED_MAX_MINUTES = [10, 20, 30] as const;
+/** "New ideas" round counter; the Worker maps it to a fixed style list. */
+export const MAX_VARIATION = 99;
 
 export const NUTRITION_KCAL_RANGE = [50, 2000] as const;
 export const NUTRITION_PROTEIN_RANGE = [0, 150] as const;
@@ -51,6 +53,8 @@ export interface RecipeRequest {
   ingredients: string[];
   maxMinutes: number;
   vegetarian: boolean;
+  /** 1..99 asks for a different style; absent (or 0) = the default prompt. */
+  variation?: number;
 }
 
 export type ValidationResult<T> =
@@ -180,14 +184,23 @@ export function validateRecipesRequest(
     return { ok: false, reason: "vegetarian: not a boolean" };
   }
 
-  return {
-    ok: true,
-    value: {
-      ingredients: unique,
-      maxMinutes: data.maxMinutes,
-      vegetarian: data.vegetarian,
-    },
+  const variation = data.variation === undefined ? 0 : data.variation;
+  if (
+    typeof variation !== "number" ||
+    !Number.isInteger(variation) ||
+    variation < 0 ||
+    variation > MAX_VARIATION
+  ) {
+    return { ok: false, reason: `variation: not an integer from 0 to ${MAX_VARIATION}` };
+  }
+
+  const value: RecipeRequest = {
+    ingredients: unique,
+    maxMinutes: data.maxMinutes,
+    vegetarian: data.vegetarian,
   };
+  if (variation > 0) value.variation = variation;
+  return { ok: true, value };
 }
 
 /**

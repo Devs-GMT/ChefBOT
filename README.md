@@ -57,6 +57,12 @@ npm run dev                     # http://localhost:3000 (landing), /app (kitchen
 cd worker && npm install && npx wrangler dev   # http://127.0.0.1:8787
 ```
 
+If `.env.local` points `NEXT_PUBLIC_RECIPES_API_URL` at `http://127.0.0.1:8787` but no
+Worker is running, the browser console shows `ERR_CONNECTION_REFUSED` and every request
+falls back to the 27 curated "House favourites". `npm run dev:lan` starts both. "New
+ideas" asks the AI for a different cooking style each round, and the fallback rotates
+through recipes you haven't seen yet.
+
 ### Test on your phone (same Wi-Fi)
 
 Plain `npm run dev` only serves its dev scripts to `localhost`, so a phone opening

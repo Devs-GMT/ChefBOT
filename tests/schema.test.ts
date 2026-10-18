@@ -137,6 +137,23 @@ describe("validateRecipesRequest", () => {
   });
 });
 
+describe("validateRecipesRequest — variation (\"New ideas\")", () => {
+  const base = { ingredients: ["egg", "rice"], maxMinutes: 20, vegetarian: false };
+
+  it("accepts an integer variation from 0 to 99 and drops 0", () => {
+    const one = validateRecipesRequest({ ...base, variation: 7 });
+    expect(one.ok && one.value.variation).toBe(7);
+    const zero = validateRecipesRequest({ ...base, variation: 0 });
+    expect(zero.ok && zero.value).toEqual(base);
+    const max = validateRecipesRequest({ ...base, variation: 99 });
+    expect(max.ok).toBe(true);
+  });
+
+  it.each([-1, 100, 1.5, "3", null])("rejects variation %p", (variation) => {
+    expect(validateRecipesRequest({ ...base, variation }).ok).toBe(false);
+  });
+});
+
 describe("validateRecipesResponse", () => {
   it("accepts exactly three well-formed recipes", () => {
     const result = validateRecipesResponse(validRecipes());

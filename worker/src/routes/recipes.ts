@@ -49,8 +49,36 @@ const RECIPES_SCHEMA = {
   required: ["recipes"],
 };
 
+/**
+ * "New ideas" rounds lean toward one of these styles. The list lives here,
+ * server-side: the client only sends a round number, never free text.
+ */
+export const VARIATION_STYLES = [
+  "Indonesian",
+  "Japanese",
+  "Korean",
+  "Thai",
+  "Indian",
+  "Mexican",
+  "Italian",
+  "Mediterranean",
+  "Middle Eastern",
+  "Chinese",
+  "French bistro",
+  "American diner",
+] as const;
+
+const BASE_TEMPERATURE = 0.7;
+const VARIATION_TEMPERATURE = 0.95;
+
+function variationLine(variation: number | undefined): string | null {
+  if (!variation) return null;
+  const style = VARIATION_STYLES[(variation - 1) % VARIATION_STYLES.length];
+  return `Lean toward ${style} home cooking; avoid the most obvious dishes for these ingredients.`;
+}
+
 function systemPrompt(request: RecipeRequest): string {
-  return [
+  const lines = [
     "You are ChefBOT, a practical home-cooking recipe assistant.",
     "Return ONLY JSON matching the schema, no markdown, no commentary.",
     "Rules: exactly 3 recipes; unique titles; title at most 60 characters;",
@@ -63,7 +91,10 @@ function systemPrompt(request: RecipeRequest): string {
     request.vegetarian
       ? "Recipes MUST be strictly vegetarian (no meat, fish, poultry, or seafood)."
       : "Recipes may use any ingredients.",
-  ].join(" ");
+  ];
+  const variation = variationLine(request.variation);
+  if (variation) lines.push(variation);
+  return lines.join(" ");
 }
 
 export async function handleRecipes(
@@ -107,6 +138,7 @@ export async function handleRecipes(
       vegetarian: validated.value.vegetarian,
     }),
     responseSchema: RECIPES_SCHEMA,
+    temperature: validated.value.variation ? VARIATION_TEMPERATURE : BASE_TEMPERATURE,
   });
   if (!outcome.ok) {
     if (outcome.reason === "timeout") {

@@ -110,6 +110,33 @@ describe("selectFallbackRecipes", () => {
   });
 });
 
+describe("selectFallbackRecipes — rotation for \"New ideas\"", () => {
+  it("skips titles already shown while the pool allows", () => {
+    const shown: string[] = [];
+    for (let round = 0; round < 3; round++) {
+      const recipes = selectFallbackRecipes(request(), 3, shown);
+      expect(recipes).toHaveLength(3);
+      for (const recipe of recipes) {
+        expect(shown).not.toContain(recipe.title);
+        shown.push(recipe.title);
+      }
+    }
+    expect(new Set(shown).size).toBe(9);
+  });
+
+  it("matches excluded titles case-insensitively", () => {
+    const first = selectFallbackRecipes(request()).map((r) => r.title);
+    const next = selectFallbackRecipes(request(), 3, first.map((t) => t.toUpperCase()));
+    expect(next.map((r) => r.title)).not.toContain(first[0]);
+  });
+
+  it("starts over once every candidate has been shown", () => {
+    const all = selectFallbackRecipes(request(), curatedRecipeCount()).map((r) => r.title);
+    const recipes = selectFallbackRecipes(request(), 3, all);
+    expect(recipes.map((r) => r.title)).toEqual(selectFallbackRecipes(request()).map((r) => r.title));
+  });
+});
+
 describe("findCuratedRecipe", () => {
   it("finds a cookbook recipe by its normalized on-chain title", () => {
     const found = findCuratedRecipe("  GARLIC egg fried rice ");

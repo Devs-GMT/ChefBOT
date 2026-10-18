@@ -75,7 +75,7 @@ describe("CookFlow", () => {
       ingredients: ["egg", "rice"],
       maxMinutes: 20,
       vegetarian: false,
-    });
+    }, { exclude: [] });
 
     expect(
       await screen.findByRole("heading", { name: /Tonight's picks/ }),
@@ -160,6 +160,34 @@ describe("CookFlow", () => {
       ingredients: ["egg", "rice"],
       maxMinutes: 10,
       vegetarian: true,
-    });
+    }, { exclude: [] });
+  });
+  it("asks for a different style on New ideas and resets when the picks change", async () => {
+    const user = userEvent.setup();
+    vi.mocked(getRecipes).mockResolvedValue(AI_RESULT);
+    const titles = AI_RESULT.recipes.map((recipe) => recipe.title);
+
+    renderWithProviders(<CookFlow />);
+    await user.click(screen.getByRole("button", { name: "Egg" }));
+    await user.click(screen.getByRole("tab", { name: /Grains/ }));
+    await user.click(screen.getByRole("button", { name: "Rice" }));
+    await user.click(screen.getByRole("button", { name: "Cook something →" }));
+    await user.click(await screen.findByRole("button", { name: /New ideas/ }));
+    await user.click(await screen.findByRole("button", { name: /New ideas/ }));
+
+    const calls = vi.mocked(getRecipes).mock.calls;
+    expect(calls[0]![0].variation).toBeUndefined();
+    expect(calls[1]).toEqual([
+      { ingredients: ["egg", "rice"], maxMinutes: 20, vegetarian: false, variation: 1 },
+      { exclude: titles },
+    ]);
+    expect(calls[2]![0].variation).toBe(2);
+
+    await user.click(screen.getByRole("radio", { name: "10 min" }));
+    await user.click(screen.getByRole("button", { name: "Cook something →" }));
+    expect(calls[3]).toEqual([
+      { ingredients: ["egg", "rice"], maxMinutes: 10, vegetarian: false },
+      { exclude: [] },
+    ]);
   });
 });

@@ -45,16 +45,29 @@ interface Scored {
   score: number;
 }
 
-function pick(candidates: Scored[], selected: string[], limit: number): Recipe[] {
-  return [...candidates]
-    .sort(
-      (a, b) =>
-        b.score - a.score ||
-        a.curated.minutes - b.curated.minutes ||
-        a.curated.title.localeCompare(b.curated.title),
-    )
-    .slice(0, limit)
-    .map((s) => toRecipe(s.curated, selected));
+function rank(candidates: Scored[]): Scored[] {
+  return [...candidates].sort(
+    (a, b) =>
+      b.score - a.score ||
+      a.curated.minutes - b.curated.minutes ||
+      a.curated.title.localeCompare(b.curated.title),
+  );
+}
+
+/**
+ * Best `limit` candidates, skipping already-shown titles while enough
+ * unseen ones remain; once the pool is exhausted it starts over.
+ */
+function pick(
+  candidates: Scored[],
+  selected: string[],
+  limit: number,
+  shown: Set<string>,
+): Recipe[] {
+  const ranked = rank(candidates);
+  const fresh = ranked.filter((s) => !shown.has(normalizeTitle(s.curated.title)));
+  const chosen = fresh.length >= limit ? fresh : ranked;
+  return chosen.slice(0, limit).map((s) => toRecipe(s.curated, selected));
 }
 
 /**
@@ -66,11 +79,14 @@ function pick(candidates: Scored[], selected: string[], limit: number): Recipe[]
  *   2. vegetarian + overlap
  *   3. any overlap
  * Results are sorted by ingredient overlap, then shortest cooking time.
+ * `exclude` lists titles already shown ("New ideas"), so the pool rotates.
  */
 export function selectFallbackRecipes(
   request: RecipeRequest,
   limit = 3,
+  exclude: readonly string[] = [],
 ): Recipe[] {
+  const shown = new Set(exclude.map(normalizeTitle));
   const selected = new Set(request.ingredients);
   const scored: Scored[] = CURATED.map((curated) => ({
     curated,
@@ -87,11 +103,11 @@ export function selectFallbackRecipes(
   ];
 
   for (const pool of pools) {
-    const recipes = pick(pool, request.ingredients, limit);
+    const recipes = pick(pool, request.ingredients, limit, shown);
     if (recipes.length === limit) return recipes;
   }
 
-  return pick(scored, request.ingredients, limit);
+  return pick(scored, request.ingredients, limit, shown);
 }
 
 /**

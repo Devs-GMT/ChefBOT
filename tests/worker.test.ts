@@ -262,6 +262,31 @@ describe("Gemini proxy", () => {
     expect(sent.systemInstruction.parts[0].text).toContain("nutrition");
   });
 
+  it("leans each New ideas round toward a server-side cuisine style, warmer", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(geminiResponse(JSON.stringify(VALID_AI_PAYLOAD)));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await chefbotWorker.fetch(postRequest(VALID_REQUEST), makeEnv());
+    await chefbotWorker.fetch(postRequest({ ...VALID_REQUEST, variation: 1 }), makeEnv());
+    await chefbotWorker.fetch(postRequest({ ...VALID_REQUEST, variation: 2 }), makeEnv());
+    const sent = fetchMock.mock.calls.map(([, init]) => JSON.parse(init.body));
+    const prompt = (i: number) => sent[i].systemInstruction.parts[0].text as string;
+
+    expect(prompt(0)).not.toContain("Lean toward");
+    expect(sent[0].generationConfig.temperature).toBe(0.7);
+    expect(prompt(1)).toMatch(/Lean toward \w[\w ]+ home cooking/);
+    expect(prompt(1)).not.toBe(prompt(2));
+    expect(sent[1].generationConfig.temperature).toBeGreaterThan(0.7);
+    // The style is chosen server-side; the client only sends a number.
+    expect(JSON.parse(sent[1].contents[0].parts[0].text)).not.toHaveProperty("variation");
+  });
+
+  it("rejects an out-of-range variation", async () => {
+    vi.stubGlobal("fetch", vi.fn());
+    const response = await chefbotWorker.fetch(postRequest({ ...VALID_REQUEST, variation: 500 }), makeEnv());
+    expect(response.status).toBe(400);
+  });
+
   it("uses GEMINI_MODEL and GEMINI_THINKING_LEVEL when configured", async () => {
     const fetchMock = vi.fn().mockResolvedValue(geminiResponse(JSON.stringify(VALID_AI_PAYLOAD)));
     vi.stubGlobal("fetch", fetchMock);

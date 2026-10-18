@@ -8,9 +8,11 @@ import { RecipeCard, RecipeCardSkeleton } from "@/components/kitchen/recipe-card
 import { SectionTag } from "@/components/ui/section-tag";
 import { INGREDIENT_GROUPS } from "@/lib/ingredients";
 import { getRecipes, type RecipeResult } from "@/lib/recipes";
-import { MAX_INGREDIENTS } from "@/shared/recipe-schema";
+import { MAX_INGREDIENTS, MAX_VARIATION, type RecipeRequest } from "@/shared/recipe-schema";
 
 const TIME_OPTIONS = [10, 20, 30] as const;
+/** Titles remembered for "New ideas" (about nine rounds). */
+const MAX_SEEN = 27;
 
 const LABELS = new Map(
   INGREDIENT_GROUPS.flatMap((group) => group.ingredients).map((i) => [
@@ -26,6 +28,11 @@ export function CookFlow() {
   const [phase, setPhase] = useState<"idle" | "loading" | "done">("idle");
   const [result, setResult] = useState<RecipeResult | null>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
+  const historyRef = useRef<{ key: string; round: number; seen: string[] }>({
+    key: "",
+    round: 0,
+    seen: [],
+  });
 
   const canSubmit = selected.length >= 2 && phase !== "loading";
 
@@ -56,11 +63,21 @@ export function CookFlow() {
       return;
     }
     setPhase("loading");
-    const next = await getRecipes({
-      ingredients: selected,
-      maxMinutes,
-      vegetarian,
-    });
+    // Same picks again = "New ideas": ask for the next style and skip what
+    // was already shown. Any change to the picks starts a fresh round.
+    const key = `${[...selected].sort().join(",")}|${maxMinutes}|${vegetarian}`;
+    const history = historyRef.current;
+    if (history.key !== key) {
+      historyRef.current = { key, round: 0, seen: [] };
+    } else {
+      history.round += 1;
+    }
+    const { round, seen } = historyRef.current;
+    const request: RecipeRequest = { ingredients: selected, maxMinutes, vegetarian };
+    const variation = round % (MAX_VARIATION + 1);
+    if (variation > 0) request.variation = variation;
+    const next = await getRecipes(request, { exclude: [...seen] });
+    historyRef.current.seen = [...seen, ...next.recipes.map((r) => r.title)].slice(-MAX_SEEN);
     setResult(next);
     setPhase("done");
   }
