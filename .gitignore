@@ -43,6 +43,9 @@ next-env.d.ts
 # chefbot
 !.env.example
 worker/.wrangler/
+# Worker local secrets (GEMINI_API_KEY for `wrangler dev`) — never commit.
+.dev.vars
+.dev.vars.*
 dist/
 artifacts/
 coverage/

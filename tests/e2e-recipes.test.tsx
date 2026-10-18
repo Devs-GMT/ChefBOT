@@ -4,11 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CookFlow } from "@/components/kitchen/cook-flow";
 import chefbotWorker from "@/worker/src/index";
-import {
-  OPENAI_URL,
-  resetRateLimiter,
-  type WorkerEnv,
-} from "@/worker/src/runtime";
+import type { WorkerEnv } from "@/worker/src/env";
+import { GEMINI_BASE_URL, DEFAULT_GEMINI_MODEL, geminiUrl } from "@/worker/src/lib/gemini";
+import { resetRateLimiter } from "@/worker/src/lib/rate-limit";
 import { renderWithProviders } from "./render-with-providers";
 
 /**
@@ -16,7 +14,7 @@ import { renderWithProviders } from "./render-with-providers";
  *
  *   CookFlow UI → getRecipes (real lib) → global fetch stub
  *     → real Cloudflare Worker handler (worker/src/index.ts)
- *       → canned OpenAI chat.completions response
+ *       → canned Gemini generateContent response
  *         → schema validation → recipes rendered in the UI.
  *
  * No module under test is mocked — only the network boundary is stubbed.
@@ -54,12 +52,12 @@ const AI_PAYLOAD = {
 };
 
 const WORKER_ENV: WorkerEnv = {
-  OPENAI_API_KEY: "test-key",
+  GEMINI_API_KEY: "test-key",
   CORS_ALLOWED_ORIGINS: "http://localhost:3000",
   RATE_LIMIT_PER_HOUR: "100",
 };
 
-let openAiStatus = 200;
+let providerStatus = 200;
 
 function stubNetworkToRealWorker(): void {
   vi.stubGlobal(
@@ -73,13 +71,18 @@ function stubNetworkToRealWorker(): void {
               ? input.href
               : input.url;
 
-        if (url.startsWith(OPENAI_URL)) {
-          if (openAiStatus !== 200) {
-            return new Response("upstream boom", { status: openAiStatus });
+        if (url.startsWith(GEMINI_BASE_URL)) {
+          if (providerStatus !== 200) {
+            return new Response("upstream boom", { status: providerStatus });
           }
           return new Response(
             JSON.stringify({
-              choices: [{ message: { content: JSON.stringify(AI_PAYLOAD) } }],
+              candidates: [
+                {
+                  content: { role: "model", parts: [{ text: JSON.stringify(AI_PAYLOAD) }] },
+                  finishReason: "STOP",
+                },
+              ],
             }),
             { status: 200, headers: { "Content-Type": "application/json" } },
           );
@@ -94,13 +97,13 @@ function stubNetworkToRealWorker(): void {
 async function pickEggRiceAndFindRecipes(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole("button", { name: "Egg" }));
   await user.click(screen.getByRole("tab", { name: /Grains/ }));
-    await user.click(screen.getByRole("button", { name: "Rice" }));
+  await user.click(screen.getByRole("button", { name: "Rice" }));
   await user.click(screen.getByRole("button", { name: "Cook something →" }));
 }
 
 beforeEach(() => {
   process.env.NEXT_PUBLIC_RECIPES_API_URL = WORKER_BASE;
-  openAiStatus = 200;
+  providerStatus = 200;
   resetRateLimiter();
   stubNetworkToRealWorker();
 });
@@ -111,7 +114,7 @@ afterEach(() => {
   resetRateLimiter();
 });
 
-describe("recipes end-to-end (UI → client → Worker → mocked OpenAI)", () => {
+describe("recipes end-to-end (UI → client → Worker → mocked Gemini)", () => {
   it("renders three AI recipes produced by the real Worker handler", async () => {
     const user = userEvent.setup();
     renderWithProviders(<CookFlow />);
@@ -138,12 +141,12 @@ describe("recipes end-to-end (UI → client → Worker → mocked OpenAI)", () =
       maxMinutes: 20,
       vegetarian: false,
     });
-    const [openAiUrl] = fetchMock.mock.calls[1];
-    expect(String(openAiUrl)).toBe(OPENAI_URL);
+    const [providerUrl] = fetchMock.mock.calls[1];
+    expect(String(providerUrl)).toBe(geminiUrl(DEFAULT_GEMINI_MODEL));
   });
 
   it("falls back to House favourites when the provider fails upstream", async () => {
-    openAiStatus = 500;
+    providerStatus = 500;
     const user = userEvent.setup();
     renderWithProviders(<CookFlow />);
 
@@ -158,9 +161,9 @@ describe("recipes end-to-end (UI → client → Worker → mocked OpenAI)", () =
     expect(fetchMock).toHaveBeenCalledTimes(2);
     const [workerUrl] = fetchMock.mock.calls[0];
     expect(workerUrl).toBe(`${WORKER_BASE}/recipes`);
-    const [openAiUrl, openAiInit] = fetchMock.mock.calls[1];
-    expect(String(openAiUrl)).toBe(OPENAI_URL);
-    const auth = (openAiInit?.headers as Record<string, string> | undefined)?.Authorization;
-    expect(auth).toBe("Bearer test-key");
+    const [providerUrl, providerInit] = fetchMock.mock.calls[1];
+    expect(String(providerUrl)).toBe(geminiUrl(DEFAULT_GEMINI_MODEL));
+    const key = (providerInit?.headers as Record<string, string> | undefined)?.["x-goog-api-key"];
+    expect(key).toBe("test-key");
   });
 });

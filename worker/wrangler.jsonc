@@ -4,9 +4,18 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-10-01",
   "vars": {
+    // Add the production site (Vercel URL + custom domain) before `wrangler deploy`.
     "CORS_ALLOWED_ORIGINS": "http://localhost:3000,http://127.0.0.1:3000",
-    "RATE_LIMIT_PER_HOUR": "20"
+    "RATE_LIMIT_PER_HOUR": "20",
+    "GEMINI_MODEL": "gemini-3.5-flash-lite"
+    // Optional: "GEMINI_THINKING_LEVEL": "minimal" (verify against the live API first).
+    // Secret (never in this file): wrangler secret put GEMINI_API_KEY
   },
+  // Per-IP hourly limiter: one SQLite-backed Durable Object per client IP.
+  "durable_objects": {
+    "bindings": [{ "name": "RATE_LIMITER", "class_name": "RateLimiter" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["RateLimiter"] }],
   "observability": {
     "enabled": true
   }

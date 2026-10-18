@@ -89,6 +89,7 @@ export async function getRecipes(
 
     const validated = validateRecipesResponse(payload, {
       maxMinutes: request.maxMinutes,
+      selected: request.ingredients,
     });
     if (!validated.ok) {
       return {

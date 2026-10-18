@@ -12,6 +12,8 @@
  *   3. Lowercase ASCII letters only (0x41-0x5A -> +0x20).
  */
 
+import { isKnownIngredient } from "./ingredients";
+
 export const RECIPES_COUNT = 3;
 export const MAX_STEPS = 8;
 export const MAX_TITLE_BYTES = 64;
@@ -130,8 +132,9 @@ function validateStringArray(
 
 /**
  * Validate an incoming POST /recipes request body.
- * Accepts any non-empty string ingredients (the frontend sends canonical
- * ids from lib/ingredients.ts); strict type and size checks only.
+ * Ingredients must be ids from the ChefBOT vocabulary (shared/ingredients.ts):
+ * free text never reaches the AI prompt, which shrinks the prompt-injection
+ * surface to a fixed list of words.
  */
 export function validateRecipesRequest(
   data: unknown,
@@ -150,6 +153,10 @@ export function validateRecipesRequest(
   const unique = [...new Set(ingredients)];
   if (unique.length > MAX_INGREDIENTS) {
     return { ok: false, reason: "ingredients: too many unique items" };
+  }
+  const unknown = unique.find((id) => !isKnownIngredient(id));
+  if (unknown !== undefined) {
+    return { ok: false, reason: "ingredients: unknown ingredient" };
   }
 
   if (typeof data.maxMinutes !== "number" || !Number.isInteger(data.maxMinutes)) {
@@ -180,9 +187,13 @@ export function validateRecipesRequest(
  */
 export function validateRecipesResponse(
   data: unknown,
-  opts: { maxMinutes?: number } = {},
+  opts: { maxMinutes?: number; selected?: readonly string[] } = {},
 ): ValidationResult<RecipesResponse> {
   const maxMinutes = opts.maxMinutes ?? 30;
+  // "Uses N of your ingredients" must be true: keep only picked ids.
+  const picked = opts.selected
+    ? new Set(opts.selected.map((id) => id.trim().toLowerCase()))
+    : null;
   if (!isPlainObject(data)) {
     return { ok: false, reason: "response: not an object" };
   }
@@ -272,7 +283,9 @@ export function validateRecipesResponse(
       title,
       emoji,
       minutes: raw.minutes,
-      uses: usesResult.value,
+      uses: picked
+        ? [...new Set(usesResult.value.map((id) => id.toLowerCase()))].filter((id) => picked.has(id))
+        : usesResult.value,
       missing: missingResult.value,
       steps: stepsResult.value,
     });
