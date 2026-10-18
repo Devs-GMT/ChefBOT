@@ -54,3 +54,6 @@ cache/
 
 # Private photos for npm run eval:scan
 worker/eval-photos/
+
+# Local CodeGraph index (developer tooling)
+.codegraph/
