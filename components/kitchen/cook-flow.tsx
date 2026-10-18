@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { FridgeScan } from "@/components/kitchen/fridge-scan";
 import { IngredientPicker, ingredientEmoji } from "@/components/kitchen/ingredient-picker";
@@ -31,6 +31,7 @@ export function CookFlow() {
   const [phase, setPhase] = useState<"idle" | "loading" | "done">(restored.result ? "done" : "idle");
   const [result, setResult] = useState<RecipeResult | null>(restored.result);
   const resultsRef = useRef<HTMLDivElement>(null);
+  const newIdeasHintId = useId();
   const historyRef = useRef({ ...restored.history, seen: [...restored.history.seen] });
   const skipScrollRef = useRef(restored.result !== null);
 
@@ -312,13 +313,22 @@ export function CookFlow() {
                   </span>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={() => void requestRecipes()}
-                className="min-h-11 rounded-full border-[1.5px] border-ink px-5 text-sm font-medium text-ink transition-colors hover:bg-ink hover:text-white"
-              >
-                New ideas ↻
-              </button>
+              <div className="flex flex-col items-end gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => void requestRecipes()}
+                  disabled={!canSubmit}
+                  aria-describedby={selected.length < 2 ? newIdeasHintId : undefined}
+                  className="min-h-11 rounded-full border-[1.5px] border-ink px-5 text-sm font-medium text-ink transition-colors hover:bg-ink hover:text-white disabled:cursor-not-allowed disabled:border-ash disabled:text-brick disabled:hover:bg-transparent"
+                >
+                  New ideas ↻
+                </button>
+                {selected.length < 2 && (
+                  <p id={newIdeasHintId} className="text-xs text-alert">
+                    Pick at least 2 ingredients for new ideas.
+                  </p>
+                )}
+              </div>
             </div>
             <div className="mt-6 space-y-4">
               {result.recipes.map((recipe, index) => (

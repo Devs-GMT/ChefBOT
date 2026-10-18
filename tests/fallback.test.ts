@@ -137,6 +137,41 @@ describe("selectFallbackRecipes — rotation for \"New ideas\"", () => {
   });
 });
 
+describe("selectFallbackRecipes — narrow filters", () => {
+  function rounds(req: RecipeRequest, count: number) {
+    const shown: string[] = [];
+    const all: string[][] = [];
+    for (let i = 0; i < count; i++) {
+      const titles = selectFallbackRecipes(req, 3, shown).map((r) => r.title);
+      all.push(titles);
+      shown.push(...titles);
+    }
+    return all;
+  }
+
+  it("relaxes the time limit before repeating a dish", () => {
+    // Only 6 vegetarian recipes fit 10 minutes: rounds 3+ must still be new.
+    const all = rounds(request({ maxMinutes: 10, vegetarian: true }), 4).flat();
+    expect(new Set(all).size).toBe(all.length);
+  });
+
+  it("keeps the in-time dishes first", () => {
+    const [first] = rounds(request({ maxMinutes: 10, vegetarian: true }), 1);
+    const minutes = selectFallbackRecipes(request({ maxMinutes: 10, vegetarian: true })).map((r) => r.minutes);
+    expect(first).toHaveLength(3);
+    expect(minutes.every((m) => m <= 10)).toBe(true);
+  });
+
+  it("never relaxes vegetarian, however many rounds", () => {
+    const vegTitles = new Set(
+      selectFallbackRecipes(request({ vegetarian: true, maxMinutes: 30 }), 99).map((r) => r.title),
+    );
+    for (const titles of rounds(request({ maxMinutes: 10, vegetarian: true }), 8)) {
+      for (const title of titles) expect(vegTitles.has(title)).toBe(true);
+    }
+  });
+});
+
 describe("findCuratedRecipe", () => {
   it("finds a cookbook recipe by its normalized on-chain title", () => {
     const found = findCuratedRecipe("  GARLIC egg fried rice ");

@@ -55,31 +55,17 @@ function rank(candidates: Scored[]): Scored[] {
 }
 
 /**
- * Best `limit` candidates, skipping already-shown titles while enough
- * unseen ones remain; once the pool is exhausted it starts over.
- */
-function pick(
-  candidates: Scored[],
-  selected: string[],
-  limit: number,
-  shown: Set<string>,
-): Recipe[] {
-  const ranked = rank(candidates);
-  const fresh = ranked.filter((s) => !shown.has(normalizeTitle(s.curated.title)));
-  const chosen = fresh.length >= limit ? fresh : ranked;
-  return chosen.slice(0, limit).map((s) => toRecipe(s.curated, selected));
-}
-
-/**
  * Local fallback matcher — the "House favourites" source.
  *
- * Returns exactly `limit` recipes (3) whenever the curated pool is large
- * enough, relaxing filters in order:
- *   1. vegetarian + within time + ingredient overlap
- *   2. vegetarian + overlap
- *   3. any overlap
- * Results are sorted by ingredient overlap, then shortest cooking time.
- * `exclude` lists titles already shown ("New ideas"), so the pool rotates.
+ * Candidates in order of preference:
+ *   1. vegetarian if asked + within the time limit, by ingredient overlap
+ *   2. the same diet but over the time limit (the card shows real minutes)
+ *   3. any diet — only when the diet alone has fewer than `limit` recipes
+ * `exclude` lists titles already shown ("New ideas"): unseen candidates
+ * come first, so a narrow filter relaxes the time limit before repeating
+ * anything; once every candidate has been shown it starts over. The
+ * vegetarian preference is never relaxed while enough vegetarian recipes
+ * exist.
  */
 export function selectFallbackRecipes(
   request: RecipeRequest,
@@ -93,21 +79,17 @@ export function selectFallbackRecipes(
     score: overlap(selected, curated.base),
   }));
 
-  const veg = scored.filter((s) =>
-    request.vegetarian ? s.curated.vegetarian : true,
-  );
-  const pools: Scored[][] = [
-    veg.filter((s) => s.curated.minutes <= request.maxMinutes),
-    veg,
-    scored,
+  const fitsDiet = (s: Scored) => !request.vegetarian || s.curated.vegetarian;
+  const diet = scored.filter(fitsDiet);
+  const ordered = [
+    ...rank(diet.filter((s) => s.curated.minutes <= request.maxMinutes)),
+    ...rank(diet.filter((s) => s.curated.minutes > request.maxMinutes)),
+    ...(diet.length < limit ? rank(scored.filter((s) => !fitsDiet(s))) : []),
   ];
 
-  for (const pool of pools) {
-    const recipes = pick(pool, request.ingredients, limit, shown);
-    if (recipes.length === limit) return recipes;
-  }
-
-  return pick(scored, request.ingredients, limit, shown);
+  const isShown = (s: Scored) => shown.has(normalizeTitle(s.curated.title));
+  const chosen = [...ordered.filter((s) => !isShown(s)), ...ordered.filter(isShown)];
+  return chosen.slice(0, limit).map((s) => toRecipe(s.curated, request.ingredients));
 }
 
 /**

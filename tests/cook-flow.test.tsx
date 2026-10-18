@@ -212,4 +212,20 @@ describe("CookFlow", () => {
     await user.click(screen.getByRole("button", { name: /New ideas/ }));
     expect(vi.mocked(getRecipes).mock.calls.at(-1)![0].variation).toBe(1);
   });
+
+  it("disables New ideas with a hint once fewer than two ingredients are picked", async () => {
+    const user = userEvent.setup();
+    vi.mocked(getRecipes).mockResolvedValue(AI_RESULT);
+    renderWithProviders(<CookFlow />);
+    await user.click(screen.getByRole("button", { name: "Egg" }));
+    await user.click(screen.getByRole("tab", { name: /Grains/ }));
+    await user.click(screen.getByRole("button", { name: "Rice" }));
+    await user.click(screen.getByRole("button", { name: "Cook something →" }));
+    const again = await screen.findByRole("button", { name: /New ideas/ });
+    expect(again).toBeEnabled();
+
+    await user.click(screen.getByRole("button", { name: "Remove Egg" }));
+    expect(again).toBeDisabled();
+    expect(again).toHaveAccessibleDescription("Pick at least 2 ingredients for new ideas.");
+  });
 });
