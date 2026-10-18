@@ -37,7 +37,7 @@ describe("Add to shopping list (recipe card)", () => {
 
     expect(getShoppingList().map((i) => i.name)).toEqual(["garlic", "fish sauce"]);
     expect(screen.getByRole("button", { name: /On your list/ })).toBeDisabled();
-    expect(screen.getByRole("link", { name: "View list" })).toHaveAttribute("href", "#shopping-list");
+    expect(screen.getByRole("link", { name: "View list" })).toHaveAttribute("href", "/app/list");
   });
 
   it("shows the list size in the nav, right after Cook", async () => {
@@ -55,7 +55,7 @@ describe("Add to shopping list (recipe card)", () => {
     await user.click(screen.getByRole("button", { name: "Add missing to shopping list" }));
     expect(within(nav).getByRole("link", { name: "List, 2 items" })).toHaveAttribute(
       "href",
-      "#shopping-list",
+      "/app/list",
     );
   });
 
@@ -70,6 +70,7 @@ describe("ShoppingList section", () => {
     renderWithProviders(<ShoppingList />);
     expect(screen.getByRole("heading", { name: "Shopping List" })).toBeInTheDocument();
     expect(screen.getByText(/Nothing to buy yet/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Find a recipe →" })).toHaveAttribute("href", "/app");
   });
 
   it("lists items added from a card, checks them off and removes checked", async () => {

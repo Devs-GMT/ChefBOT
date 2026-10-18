@@ -85,6 +85,7 @@ describe("MyKitchen", () => {
     mockConnection(true);
     renderWithProviders(<MyKitchen />);
     expect(await screen.findByText(/Nothing stamped yet/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Find a recipe →" })).toHaveAttribute("href", "/app");
   });
 
   it("lists stamped dishes for the connected wallet", async () => {

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import {
   useConnect,
@@ -320,6 +321,12 @@ export function CookButton({
             >
               Share on X ↗
             </a>
+            <Link
+              href="/app/kitchen"
+              className="text-xs font-medium text-alert underline underline-offset-2"
+            >
+              See it in My Kitchen →
+            </Link>
           </div>
         </div>
       )}

@@ -1,7 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 import { useState } from "react";
+import type { SectionTitleProps } from "@/components/ui/section-title";
 
 import { Ladder, Podium, type RankedDish } from "@/components/kitchen/leaderboard-chart";
 import { SectionTag } from "@/components/ui/section-tag";
@@ -17,7 +19,7 @@ type Status = "loading" | "ready" | "empty" | "error" | "no-config";
  * on-chain cook counts set huge; everyone else climbs a ranked ladder with
  * bars scaled to the leader. Tapping any dish opens it.
  */
-export function Leaderboard() {
+export function Leaderboard({ titleAs: Title = "h2" }: SectionTitleProps = {}) {
   const address = contractAddress();
   const { data, isPending, isError, refetch } = useDishes();
   const [openKey, setOpenKey] = useState<string | null>(null);
@@ -49,12 +51,12 @@ export function Leaderboard() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <SectionTag>Step 03 · On-chain</SectionTag>
-          <h2
+          <Title
             id="leaderboard-heading"
             className="mt-5 text-[clamp(2.25rem,6vw,72px)] leading-[0.92] font-bold tracking-[-0.03em] text-ink"
           >
             Most Cooked
-          </h2>
+          </Title>
         </div>
         <p className="max-w-sm text-base leading-[1.4] tracking-[-0.02em] text-brick">
           Every bar is a count of real stamps on BOT Chain —{" "}
@@ -112,9 +114,9 @@ export function Leaderboard() {
             </p>
             <p className="mt-2 text-base text-brick">
               Be the first to cook something —{" "}
-              <a href="#cook" className="font-medium text-alert underline underline-offset-2">
+              <Link href="/app" className="font-medium text-alert underline underline-offset-2">
                 pick your ingredients
-              </a>
+              </Link>
               .
             </p>
           </div>
@@ -233,9 +235,9 @@ function DishDetail({ dish, rank }: { dish: DishEntry; rank: number }) {
           <p className="mt-4 max-w-lg text-[15px] leading-[1.45] text-ink">
             Only the title and emoji live on-chain — the steps stay in the app
             where the recipe was cooked.{" "}
-            <a href="#cook" className="font-medium underline underline-offset-2">
+            <Link href="/app" className="font-medium underline underline-offset-2">
               Ask ChefBOT for your own version →
-            </a>
+            </Link>
           </p>
         )}
       </div>

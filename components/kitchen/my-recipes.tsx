@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState, type FormEvent } from "react";
+import type { SectionTitleProps } from "@/components/ui/section-title";
 
 import { RecipeBox } from "@/components/kitchen/recipe-box";
 import { SectionTag } from "@/components/ui/section-tag";
@@ -37,7 +38,7 @@ function toDraft(recipe: Recipe): RecipeDraft {
 }
 
 /** v1.1: a cook's own recipes — private to this browser, stampable. */
-export function MyRecipes() {
+export function MyRecipes({ titleAs: Title = "h2" }: SectionTitleProps = {}) {
   const recipes = useMyRecipes();
   const [draft, setDraft] = useState<RecipeDraft | null>(null);
   const [editing, setEditing] = useState<string | undefined>(undefined);
@@ -91,12 +92,12 @@ export function MyRecipes() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <SectionTag>Your cookbook</SectionTag>
-          <h2
+          <Title
             id="my-recipes-heading"
             className="mt-5 text-[clamp(2.25rem,6vw,72px)] leading-[0.92] font-bold tracking-[-0.03em] text-ink"
           >
             My Recipes
-          </h2>
+          </Title>
         </div>
         <p className="max-w-sm text-base leading-[1.4] tracking-[-0.02em] text-brick">
           Saved only in this browser. Stamping one puts just its title and

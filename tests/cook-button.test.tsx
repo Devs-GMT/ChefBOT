@@ -185,6 +185,10 @@ describe("CookButton", () => {
     const share = screen.getByRole("link", { name: /Share on X/ });
     expect(share.getAttribute("href")).toContain("https://x.com/intent/post");
     expect(share.getAttribute("href")).toContain("cook+%2314");
+    expect(screen.getByRole("link", { name: "See it in My Kitchen →" })).toHaveAttribute(
+      "href",
+      "/app/kitchen",
+    );
   });
 
   it("archives the recipe once the stamp is confirmed", async () => {

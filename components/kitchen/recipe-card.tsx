@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useId, useState, type ReactNode } from "react";
 
 import { CookButton } from "@/components/kitchen/cook-button";
@@ -113,12 +114,12 @@ export function RecipeCard({ recipe, index, total = 3, archive = true, actions }
               {onList ? "On your list ✓" : "+ Shopping list"}
             </button>
             {onList && (
-              <a
-                href="#shopping-list"
+              <Link
+                href="/app/list"
                 className="text-xs font-medium text-ink underline underline-offset-2"
               >
                 View list
-              </a>
+              </Link>
             )}
           </div>
         ) : (

@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useId, useState } from "react";
+import type { SectionTitleProps } from "@/components/ui/section-title";
 
 import { SectionTag } from "@/components/ui/section-tag";
 import { PassportStamp, StampDefs } from "@/components/kitchen/passport-stamp";
@@ -16,7 +18,7 @@ type Status = "no-config" | "disconnected" | "loading" | "empty" | "error" | "re
 /** Stamps per passport page: 3×4 on a phone, 4×3 from `sm`. */
 const STAMPS_PER_PAGE = 12;
 
-export function MyKitchen() {
+export function MyKitchen({ titleAs: Title = "h2" }: SectionTitleProps = {}) {
   const connection = useWalletConnection();
   const contract = contractAddress();
   const {
@@ -47,12 +49,12 @@ export function MyKitchen() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <SectionTag>Your ledger</SectionTag>
-          <h2
+          <Title
             id="kitchen-heading"
             className="mt-5 text-[clamp(2.25rem,6vw,72px)] leading-[0.92] font-bold tracking-[-0.03em] text-ink"
           >
             My Kitchen
-          </h2>
+          </Title>
         </div>
         <p className="max-w-sm text-base leading-[1.4] tracking-[-0.02em] text-brick">
           Every dish your wallet has stamped on BOT Chain — your personal
@@ -101,9 +103,15 @@ export function MyKitchen() {
           <div role="status" className="text-sm text-brick">
             <p className="font-medium text-ink">Nothing stamped yet.</p>
             <p className="mt-2">
-              Pick a recipe above and hit “I cooked it” — your first stamp lands
+              Pick a recipe and hit “I cooked it” — your first stamp lands
               here.
             </p>
+            <Link
+              href="/app"
+              className="mt-3 inline-block font-medium text-alert underline underline-offset-2"
+            >
+              Find a recipe →
+            </Link>
           </div>
         )}
 

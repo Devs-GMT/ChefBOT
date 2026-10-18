@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useSyncExternalStore } from "react";
+import type { SectionTitleProps } from "@/components/ui/section-title";
 
 import { Receipt } from "@/components/kitchen/shopping-receipt";
 import { SectionTag } from "@/components/ui/section-tag";
@@ -18,7 +20,7 @@ const noSubscribe = () => () => {};
 const browserCanShare = () => typeof navigator.share === "function";
 
 /** v1.1 shopping list: the recipes' missing items, kept in this browser. */
-export function ShoppingList() {
+export function ShoppingList({ titleAs: Title = "h2" }: SectionTitleProps = {}) {
   const items = useShoppingList();
   const [notice, setNotice] = useState<string | null>(null);
   const canShare = useSyncExternalStore(noSubscribe, browserCanShare, () => false);
@@ -52,12 +54,12 @@ export function ShoppingList() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <SectionTag>For the shop</SectionTag>
-          <h2
+          <Title
             id="shopping-heading"
             className="mt-5 text-[clamp(2.25rem,6vw,72px)] leading-[0.92] font-bold tracking-[-0.03em] text-ink"
           >
             Shopping List
-          </h2>
+          </Title>
         </div>
         <p className="max-w-sm text-base leading-[1.4] tracking-[-0.02em] text-brick">
           What your recipes are missing. Saved only in this browser — no
@@ -69,7 +71,10 @@ export function ShoppingList() {
         {items.length === 0 ? (
           <p className="text-center text-sm text-brick">
             <span className="font-medium text-ink">Nothing to buy yet.</span>{" "}
-            Tap “+ Shopping list” on a recipe and its missing items land here.
+            Tap “+ Shopping list” on a recipe and its missing items land here.{" "}
+            <Link href="/app" className="font-medium text-alert underline underline-offset-2">
+              Find a recipe →
+            </Link>
           </p>
         ) : (
           <>

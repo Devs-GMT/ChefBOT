@@ -59,6 +59,7 @@ describe("Leaderboard", () => {
     renderWithProviders(<Leaderboard />);
     expect(await screen.findByText(/No dishes stamped yet/)).toBeInTheDocument();
     expect(screen.getByText(/Be the first to cook something/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "pick your ingredients" })).toHaveAttribute("href", "/app");
   });
 
   it("opens a dish when its bar is tapped, with cookbook steps when known", async () => {
@@ -86,6 +87,7 @@ describe("Leaderboard", () => {
     expect(
       screen.getByRole("region", { name: /Mystery Stew/ }),
     ).toHaveTextContent(/steps stay in the app/i);
+    expect(screen.getByRole("link", { name: /Ask ChefBOT for your own version/ })).toHaveAttribute("href", "/app");
   });
 
   it("shows archived steps for dishes that are not in the cookbook", async () => {

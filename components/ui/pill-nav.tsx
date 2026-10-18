@@ -8,6 +8,29 @@ export interface PillNavLink {
   label: string;
   /** Small count chip after the label (hidden when 0 or absent). */
   badge?: number;
+  /** The page this link points at is the one being shown. */
+  active?: boolean;
+}
+
+/** Route links navigate client-side; `#section` links stay plain anchors. */
+function NavLink({
+  link,
+  className,
+  onClick,
+}: {
+  link: PillNavLink;
+  className: string;
+  onClick?: () => void;
+}) {
+  const props = {
+    href: link.href,
+    "aria-label": linkName(link),
+    "aria-current": link.active ? ("page" as const) : undefined,
+    onClick,
+    className,
+  };
+  const content = <LinkContent link={link} />;
+  return link.href.startsWith("#") ? <a {...props}>{content}</a> : <Link {...props}>{content}</Link>;
 }
 
 function LinkContent({ link }: { link: PillNavLink }) {
@@ -83,14 +106,15 @@ export function PillNav({ label, homeHref, links, action, className = "" }: Pill
 
           <div className="hidden items-center md:flex">
             {links.map((link) => (
-              <a
+              <NavLink
                 key={link.href}
-                href={link.href}
-                aria-label={linkName(link)}
-                className="flex min-h-11 items-center rounded-full px-3.5 text-sm font-medium text-parchment/75 transition-colors hover:bg-parchment/10 hover:text-parchment"
-              >
-                <LinkContent link={link} />
-              </a>
+                link={link}
+                className={`flex min-h-11 items-center rounded-full px-3.5 text-sm font-medium transition-colors ${
+                  link.active
+                    ? "bg-parchment text-ink"
+                    : "text-parchment/75 hover:bg-parchment/10 hover:text-parchment"
+                }`}
+              />
             ))}
           </div>
 
@@ -117,14 +141,13 @@ export function PillNav({ label, homeHref, links, action, className = "" }: Pill
             <ul>
               {links.map((link) => (
                 <li key={link.href}>
-                  <a
-                    href={link.href}
-                    aria-label={linkName(link)}
+                  <NavLink
+                    link={link}
                     onClick={() => setOpen(false)}
-                    className="flex min-h-12 items-center rounded-2xl px-4 text-[17px] font-medium text-parchment transition-colors hover:bg-parchment/10"
-                  >
-                    <LinkContent link={link} />
-                  </a>
+                    className={`flex min-h-12 items-center rounded-2xl px-4 text-[17px] font-medium transition-colors ${
+                      link.active ? "bg-parchment text-ink" : "text-parchment hover:bg-parchment/10"
+                    }`}
+                  />
                 </li>
               ))}
             </ul>
