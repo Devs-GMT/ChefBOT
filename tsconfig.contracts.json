@@ -1,0 +1,11 @@
+{
+  // Hardhat tests and config. Their contract types come from
+  // artifacts/artifacts.d.ts, which only exists after `hardhat build`, so
+  // they are checked here (npm run typecheck:contracts), not by `next build`.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "incremental": false
+  },
+  "include": ["hardhat.config.ts", "test/**/*.ts", "artifacts/**/*.d.ts"],
+  "exclude": ["node_modules"]
+}
