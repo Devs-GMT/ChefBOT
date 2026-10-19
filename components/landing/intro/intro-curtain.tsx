@@ -31,6 +31,8 @@ const EXPO_IN_OUT = "cubic-bezier(0.87, 0, 0.13, 1)";
 const POWER3_IN = "cubic-bezier(0.32, 0, 0.67, 0)";
 /** Phones: a softer in-out, so the short morph glides instead of jumping. */
 const POWER3_IN_OUT = "cubic-bezier(0.65, 0, 0.35, 1)";
+/** Phones: the circle → card morph — an even, unhurried glide. */
+const PHONE_MORPH = "cubic-bezier(0.45, 0, 0.25, 1)";
 
 const WORD = splitIntroWord("Real Food.");
 
@@ -50,7 +52,8 @@ const powerInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 /
  * that layer onto the card and releases the clip — the last frame matches
  * the card, so the layer is dropped with no fade. Phones play 1.15× faster
  * with a softer glide, side photos kept on screen and flying out vertically,
- * the circle irising open onto the card, and no counter. Click / key / wheel fast-forwards.
+ * the circle easing into the card's shape over the whole trip down, and no
+ * counter. Click / key / wheel fast-forwards.
  */
 export function IntroCurtain() {
   const overlay = useRef<HTMLDivElement>(null);
@@ -200,23 +203,34 @@ export function IntroCurtain() {
       const heroShift = heroPhoto ? Number(gsap.getProperty(heroPhoto, "yPercent")) || 0 : 0;
       const travel = `translate(${c.left - l.left}px, ${c.top - l.top}px)`;
       if (phone) {
-        // Phones (tall 4:5 card): the circle travels as a circle, then irises
-        // open until it covers the card; the layer's own 28px radius (CSS)
-        // gives the final shape — no rounded-square phase on the way.
-        play(layer, [{ transform: "none" }, { transform: travel }], { duration: 1.5, easing: glide });
-        const iris = play(
-          layer,
-          [
-            { clipPath: `circle(${d / 2}px at 50% 50%)` },
-            { clipPath: `circle(${Math.hypot(l.width, l.height) / 2 + 1}px at 50% 50%)` },
-          ],
-          { duration: 1.15, delay: 0.35, easing: glide },
-        );
+        // Phones (tall 4:5 card): one animation for position + shape, sampled
+        // in steps so both always share the same progress. The clip box grows
+        // linearly while its "roundness" (radius / half the short side) eases
+        // linearly from a full circle to the card's 28px — circle → pill →
+        // rounded card, spread evenly over the whole trip down.
+        const dx = c.left - l.left;
+        const dy = c.top - l.top;
+        const endRatio = 28 / (Math.min(l.width, l.height) / 2);
+        const steps = 12;
+        const frames: Keyframe[] = [];
+        for (let i = 0; i <= steps; i++) {
+          const o = i / steps;
+          const t = top * (1 - o);
+          const s = side * (1 - o);
+          const ratio = 1 + (endRatio - 1) * o;
+          const r = (ratio * Math.min(l.width - 2 * s, l.height - 2 * t)) / 2;
+          frames.push({
+            offset: o,
+            transform: `translate(${dx * o}px, ${dy * o}px)`,
+            clipPath: `inset(${t}px ${s}px ${t}px ${s}px round ${r}px)`,
+          });
+        }
+        const morph = play(layer, frames, { duration: 1.6, easing: PHONE_MORPH });
         play(inner, [{ transform: "none" }, { transform: `translateY(${heroShift}%)` }], {
-          duration: 1.5,
-          easing: glide,
+          duration: 1.6,
+          easing: PHONE_MORPH,
         });
-        iris.onfinish = finish;
+        morph.onfinish = finish;
         return;
       }
       const morph = play(
@@ -262,7 +276,7 @@ export function IntroCurtain() {
       );
       // Phones: the circle visibly starts toward the card before the green lifts.
       play(bg, [{ transform: "none" }, { transform: "translateY(-100%)" }], {
-        duration: phone ? 1.3 : 1.1,
+        duration: phone ? 1.4 : 1.1,
         delay: phone ? 0.3 : 0.2,
         easing: glide,
       });

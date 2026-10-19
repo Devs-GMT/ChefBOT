@@ -326,12 +326,7 @@ html.intro-active:not(.intro-exiting) body {
 @media (pointer: coarse), (max-width: 639px) {
   .intro-overlay {
     --k: 0.87;
-  }
-  /* Final shape for the phone iris morph (intro-curtain.tsx). */
-  .intro-photo {
-    border-radius: 28px;
-  }
-}
+  }}
 
 .intro-photo {
   position: absolute;
