@@ -325,7 +325,7 @@ html.intro-active:not(.intro-exiting) body {
 }
 @media (pointer: coarse), (max-width: 639px) {
   .intro-overlay {
-    --k: 0.714;
+    --k: 0.87;
   }
 }
 

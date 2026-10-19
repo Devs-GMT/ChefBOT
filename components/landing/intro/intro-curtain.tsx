@@ -29,6 +29,8 @@ const FAST_FORWARD = 3.5;
 const EXPO_OUT = "cubic-bezier(0.16, 1, 0.3, 1)";
 const EXPO_IN_OUT = "cubic-bezier(0.87, 0, 0.13, 1)";
 const POWER3_IN = "cubic-bezier(0.32, 0, 0.67, 0)";
+/** Phones: a softer in-out, so the short morph glides instead of jumping. */
+const POWER3_IN_OUT = "cubic-bezier(0.65, 0, 0.35, 1)";
 
 const WORD = splitIntroWord("Real Food.");
 
@@ -46,8 +48,9 @@ const powerInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 /
  * card (same image URL and crop) clipped to a circle. The exit (Web
  * Animations, also compositor-driven except the short clip morph) slides
  * that layer onto the card and releases the clip — the last frame matches
- * the card, so the layer is dropped with no fade. Phones play 1.4× faster
- * with one side photo and no counter. Click / key / wheel fast-forwards.
+ * the card, so the layer is dropped with no fade. Phones play 1.15× faster
+ * with a softer glide, side photos kept on screen and flying out vertically,
+ * and no counter. Click / key / wheel fast-forwards.
  */
 export function IntroCurtain() {
   const overlay = useRef<HTMLDivElement>(null);
@@ -92,7 +95,9 @@ export function IntroCurtain() {
 
     window.scrollTo(0, 0);
     const phone = window.matchMedia(TOUCH).matches || window.innerWidth < 640;
-    const k = phone ? 1 / 1.4 : 1;
+    // Keep in sync with the phone `--k` in globals.css.
+    const k = phone ? 1 / 1.15 : 1;
+    const glide = phone ? POWER3_IN_OUT : EXPO_IN_OUT;
     const layer = node.querySelector<HTMLElement>("[data-intro-photo]")!;
     const inner = node.querySelector<HTMLElement>("[data-intro-photo-inner]")!;
     const anchor = node.querySelector<HTMLElement>("[data-intro-anchor]")!;
@@ -202,9 +207,12 @@ export function IntroCurtain() {
             clipPath: "inset(0px 0px 0px 0px round 28px)",
           },
         ],
-        { duration: 1.15 },
+        { duration: 1.15, easing: glide },
       );
-      play(inner, [{ transform: "none" }, { transform: `translateY(${heroShift}%)` }], { duration: 1.15 });
+      play(inner, [{ transform: "none" }, { transform: `translateY(${heroShift}%)` }], {
+        duration: 1.15,
+        easing: glide,
+      });
       morph.onfinish = finish;
     };
 
@@ -221,17 +229,25 @@ export function IntroCurtain() {
       }
       chars.forEach((el, i) =>
         play(el, [{ transform: "none" }, { transform: "translateY(-115%)" }], {
-          duration: 0.55,
-          delay: i * 0.018,
+          duration: phone ? 0.45 : 0.55,
+          delay: i * (phone ? 0.012 : 0.018),
           easing: POWER3_IN,
         }),
       );
       metas.forEach((el) => play(el, [{ opacity: 1 }, { opacity: 0 }], { duration: 0.3, easing: "linear" }));
-      const flights = ["translate(-62vw, -24vh) rotate(-50deg)", "translate(62vw, 22vh) rotate(50deg)"];
+      // Portrait phones: the side photos leave up and down, not sideways.
+      const flights = phone
+        ? ["translate(-20vw, -70vh) rotate(-40deg)", "translate(20vw, 70vh) rotate(40deg)"]
+        : ["translate(-62vw, -24vh) rotate(-50deg)", "translate(62vw, 22vh) rotate(50deg)"];
       sides.forEach((el, i) =>
-        play(el, [{ transform: "none" }, { transform: flights[i] ?? flights[0] }], { duration: 1 }),
+        play(el, [{ transform: "none" }, { transform: flights[i] ?? flights[0] }], { duration: 1, easing: glide }),
       );
-      play(bg, [{ transform: "none" }, { transform: "translateY(-100%)" }], { duration: 1.1, delay: 0.2 });
+      // Phones: the circle visibly starts toward the card before the green lifts.
+      play(bg, [{ transform: "none" }, { transform: "translateY(-100%)" }], {
+        duration: 1.1,
+        delay: phone ? 0.3 : 0.2,
+        easing: glide,
+      });
       // Timeline markers as empty animations, so fast-forward scales them too.
       play(node, [], { duration: 0.2 }).onfinish = morphIntoHero;
       play(node, [], { duration: 0.3 }).onfinish = () =>
@@ -310,7 +326,7 @@ export function IntroCurtain() {
           <p
             data-intro-meta
             style={{ "--i": 0 } as CSSProperties}
-            className="absolute top-8 left-1/2 -translate-x-1/2 font-mono text-[12px] tracking-[0.12em] whitespace-nowrap text-parchment/70 uppercase"
+            className="absolute top-[max(2rem,env(safe-area-inset-top))] left-1/2 -translate-x-1/2 font-mono text-[12px] tracking-[0.12em] whitespace-nowrap text-parchment/70 uppercase"
           >
             ChefBOT · Kitchen brief No. 001
           </p>
@@ -320,16 +336,30 @@ export function IntroCurtain() {
             <div
               data-intro-side
               style={{ "--i": 0, "--r": "-24deg" } as CSSProperties}
-              className="absolute -top-[16vmin] -left-[30vmin] z-20 size-[22vmin] overflow-hidden rounded-full border-4 border-parchment shadow-card"
+              className="absolute -top-[24vw] -left-[12vw] z-20 size-[28vw] overflow-hidden rounded-full border-4 border-parchment shadow-card sm:-top-[16vmin] sm:-left-[30vmin] sm:size-[22vmin]"
             >
-              <Image src={greens} alt="" sizes="22vmin" quality={60} placeholder="blur" className="h-full w-full object-cover" />
+              <Image
+                src={greens}
+                alt=""
+                sizes="(max-width: 639px) 28vw, 22vmin"
+                quality={60}
+                placeholder="blur"
+                className="h-full w-full object-cover"
+              />
             </div>
             <div
               data-intro-side
               style={{ "--i": 1, "--r": "24deg" } as CSSProperties}
-              className="absolute -right-[30vmin] -bottom-[14vmin] z-20 hidden size-[24vmin] overflow-hidden rounded-full border-4 border-parchment shadow-card sm:block"
+              className="absolute -right-[12vw] -bottom-[24vw] z-20 size-[28vw] overflow-hidden rounded-full border-4 border-parchment shadow-card sm:-right-[30vmin] sm:-bottom-[14vmin] sm:size-[24vmin]"
             >
-              <Image src={poke} alt="" sizes="24vmin" quality={60} placeholder="blur" className="h-full w-full object-cover" />
+              <Image
+                src={poke}
+                alt=""
+                sizes="(max-width: 639px) 28vw, 24vmin"
+                quality={60}
+                placeholder="blur"
+                className="h-full w-full object-cover"
+              />
             </div>
 
             <p
