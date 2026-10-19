@@ -304,7 +304,7 @@ html.intro-active:not(.intro-exiting) body {
  * The photo layer is sized like the hero card (same width/aspect rules as
  * components/landing/hero.tsx) and clipped to a centred circle, so the
  * circle already shows the hero framing. Timings mirror the old GSAP
- * timeline; phones play it 1.4x faster (--k).
+ * timeline; phones use the same timing (--k stays 1).
  */
 .intro-overlay {
   --k: 1;
@@ -323,10 +323,6 @@ html.intro-active:not(.intro-exiting) body {
     --d: 46vmin;
   }
 }
-@media (pointer: coarse), (max-width: 639px) {
-  .intro-overlay {
-    --k: 0.87;
-  }}
 
 .intro-photo {
   position: absolute;

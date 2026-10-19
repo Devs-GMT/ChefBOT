@@ -29,10 +29,6 @@ const FAST_FORWARD = 3.5;
 const EXPO_OUT = "cubic-bezier(0.16, 1, 0.3, 1)";
 const EXPO_IN_OUT = "cubic-bezier(0.87, 0, 0.13, 1)";
 const POWER3_IN = "cubic-bezier(0.32, 0, 0.67, 0)";
-/** Phones: a softer in-out, so the short morph glides instead of jumping. */
-const POWER3_IN_OUT = "cubic-bezier(0.65, 0, 0.35, 1)";
-/** Phones: the circle → card morph — an even, unhurried glide. */
-const PHONE_MORPH = "cubic-bezier(0.45, 0, 0.25, 1)";
 
 const WORD = splitIntroWord("Real Food.");
 
@@ -50,10 +46,10 @@ const powerInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 /
  * card (same image URL and crop) clipped to a circle. The exit (Web
  * Animations, also compositor-driven except the short clip morph) slides
  * that layer onto the card and releases the clip — the last frame matches
- * the card, so the layer is dropped with no fade. Phones play 1.15× faster
- * with a softer glide, side photos kept on screen and flying out vertically,
- * the circle easing into the card's shape over the whole trip down, and no
- * counter. Click / key / wheel fast-forwards (touch does not, on phones).
+ * the card, so the layer is dropped with no fade. Phones share the desktop
+ * timing, with side photos kept on screen and flying out vertically, the
+ * circle staying oval until it lands on the card, and no counter.
+ * Click / key / wheel fast-forwards (touch does not, on phones).
  */
 export function IntroCurtain() {
   const overlay = useRef<HTMLDivElement>(null);
@@ -98,9 +94,6 @@ export function IntroCurtain() {
 
     window.scrollTo(0, 0);
     const phone = window.matchMedia(TOUCH).matches || window.innerWidth < 640;
-    // Keep in sync with the phone `--k` in globals.css.
-    const k = phone ? 1 / 1.15 : 1;
-    const glide = phone ? POWER3_IN_OUT : EXPO_IN_OUT;
     const layer = node.querySelector<HTMLElement>("[data-intro-photo]")!;
     const inner = node.querySelector<HTMLElement>("[data-intro-photo-inner]")!;
     const anchor = node.querySelector<HTMLElement>("[data-intro-anchor]")!;
@@ -126,8 +119,8 @@ export function IntroCurtain() {
       { duration, delay = 0, easing = EXPO_IN_OUT }: { duration: number; delay?: number; easing?: string },
     ) => {
       const anim = el.animate(keyframes, {
-        duration: duration * 1000 * k,
-        delay: delay * 1000 * k,
+        duration: duration * 1000,
+        delay: delay * 1000,
         easing,
         fill: "forwards",
       });
@@ -227,11 +220,9 @@ export function IntroCurtain() {
             clipPath: `inset(${t}px ${s}px ${t}px ${s}px round ${rx}px / ${ry}px)`,
           });
         }
-        const morph = play(layer, frames, { duration: 1.6, easing: PHONE_MORPH });
-        play(inner, [{ transform: "none" }, { transform: `translateY(${heroShift}%)` }], {
-          duration: 1.6,
-          easing: PHONE_MORPH,
-        });
+        // Same timing and curve as desktop.
+        const morph = play(layer, frames, { duration: 1.15 });
+        play(inner, [{ transform: "none" }, { transform: `translateY(${heroShift}%)` }], { duration: 1.15 });
         morph.onfinish = finish;
         return;
       }
@@ -241,12 +232,9 @@ export function IntroCurtain() {
           { transform: "none", clipPath: `inset(${top}px ${side}px ${top}px ${side}px round ${d / 2}px)` },
           { transform: travel, clipPath: "inset(0px 0px 0px 0px round 28px)" },
         ],
-        { duration: 1.15, easing: glide },
+        { duration: 1.15 },
       );
-      play(inner, [{ transform: "none" }, { transform: `translateY(${heroShift}%)` }], {
-        duration: 1.15,
-        easing: glide,
-      });
+      play(inner, [{ transform: "none" }, { transform: `translateY(${heroShift}%)` }], { duration: 1.15 });
       morph.onfinish = finish;
     };
 
@@ -263,8 +251,8 @@ export function IntroCurtain() {
       }
       chars.forEach((el, i) =>
         play(el, [{ transform: "none" }, { transform: "translateY(-115%)" }], {
-          duration: phone ? 0.45 : 0.55,
-          delay: i * (phone ? 0.012 : 0.018),
+          duration: 0.55,
+          delay: i * 0.018,
           easing: POWER3_IN,
         }),
       );
@@ -274,14 +262,9 @@ export function IntroCurtain() {
         ? ["translate(-20vw, -70vh) rotate(-40deg)", "translate(20vw, 70vh) rotate(40deg)"]
         : ["translate(-62vw, -24vh) rotate(-50deg)", "translate(62vw, 22vh) rotate(50deg)"];
       sides.forEach((el, i) =>
-        play(el, [{ transform: "none" }, { transform: flights[i] ?? flights[0] }], { duration: 1, easing: glide }),
+        play(el, [{ transform: "none" }, { transform: flights[i] ?? flights[0] }], { duration: 1 }),
       );
-      // Phones: the circle visibly starts toward the card before the green lifts.
-      play(bg, [{ transform: "none" }, { transform: "translateY(-100%)" }], {
-        duration: phone ? 1.4 : 1.1,
-        delay: phone ? 0.3 : 0.2,
-        easing: glide,
-      });
+      play(bg, [{ transform: "none" }, { transform: "translateY(-100%)" }], { duration: 1.1, delay: 0.2 });
       // Timeline markers as empty animations, so fast-forward scales them too.
       play(node, [], { duration: 0.2 }).onfinish = morphIntoHero;
       play(node, [], { duration: 0.3 }).onfinish = () =>
@@ -302,9 +285,9 @@ export function IntroCurtain() {
       img?.decode ? img.decode().catch(() => undefined) : Promise.resolve(),
       new Promise((resolve) => window.setTimeout(resolve, DECODE_WAIT_MS)),
     ]);
-    const hold = phone ? 0.05 : 0.1;
+    const hold = 0.1;
     void Promise.all([decoded, ...opening.map((a) => a.finished.catch(() => undefined))]).then(() =>
-      window.setTimeout(exit, (hold * 1000 * k) / rate),
+      window.setTimeout(exit, (hold * 1000) / rate),
     );
 
     const fastForward = () => {
