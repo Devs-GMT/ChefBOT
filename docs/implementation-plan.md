@@ -269,3 +269,19 @@ npm run build       # next build
     - `npx wrangler deploy`;
     - Vercel `NEXT_PUBLIC_CHEFBOT_CHAIN_ID=677` (the live bundle still had the testnet address and `968` at check time), then redeploy;
     - the first mainnet `cookIt` and an end-to-end check.
+- 2026-10-19: **Mainnet is fully live:**
+  - Worker version `6d85cdac` proves stamps against `rpc.botchain.ai` and the mainnet contract.
+  - Vercel production env holds the mainnet address and chain 677. The live leaderboard reads mainnet: 200 from `rpc.botchain.ai`, "No dishes stamped yet", no page errors.
+  - Gotcha: values piped from Windows PowerShell got a BOM (`﻿0x…`), which broke the address check. They were re-set via bash `printf`.
+- 2026-10-19: **Custom domain `chef-bot.my.id` (bought by the company).**
+  - **DNS:** the zone is on Cloudflare (Free), with nameservers `donald` / `hope` `.ns.cloudflare.com`. The company switched them away from `dnscloud.id`.
+  - **Site (Vercel):** `A @ 216.198.79.1` and `CNAME www a6580df3993cbdcc.vercel-dns-017.com`, both DNS only. The apex is primary; `www` 308-redirects to it, and `http` 308-redirects to `https`. `chef-bot-kappa.vercel.app` is kept.
+  - **Worker:** custom domain `api.chef-bot.my.id` (`routes`, version `673b1fb8`), so it is no longer subject to the XL `*.workers.dev` DNS block. CORS adds both new origins.
+  - **Vercel env:** `NEXT_PUBLIC_RECIPES_API_URL=https://api.chef-bot.my.id`, then redeploy.
+  - **Verified:**
+    - `https://chef-bot.my.id` returns 200;
+    - the live bundle contains a clean `https://api.chef-bot.my.id` and the mainnet address, with no `workers.dev`;
+    - `og:image` is on the new domain;
+    - api `/health` returns 200; preflight from the apex returns 204 with ACAO; a foreign origin gets 403;
+    - live `POST /recipes` returns 200 in 3.4 s with 3 recipes, and there are 0 key leaks.
+  - **Still open (owner):** a test from a phone on XL, and the first mainnet `cookIt`.

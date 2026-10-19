@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="https://chef-bot-kappa.vercel.app"><img src="https://img.shields.io/badge/live-chef--bot--kappa.vercel.app-d50000?style=flat-square&logo=vercel&logoColor=white" alt="Live site"></a>
+  <a href="https://chef-bot.my.id"><img src="https://img.shields.io/badge/live-chef--bot.my.id-d50000?style=flat-square&logo=vercel&logoColor=white" alt="Live site"></a>
   <a href="https://scan.botchain.ai/address/0x0d58c8dB2F9Cb482be94dCad9025A25f0940fA7D"><img src="https://img.shields.io/badge/BOT%20Chain-mainnet%20677-110000?style=flat-square" alt="BOT Chain mainnet 677"></a>
   <a href="https://scan.bohr.life/address/0x939878F4aA5564B91aFa1e8758A100F14AAbcB85"><img src="https://img.shields.io/badge/testnet-968-8d7d7d?style=flat-square" alt="BOT Chain testnet 968"></a>
 </p>
@@ -27,7 +27,8 @@ realistic recipes from AI, and when you actually cook one, stamp it on
 **BOT Chain**. Every stamp counts toward a public *Most Cooked*
 leaderboard and your own on-chain kitchen.
 
-- **Live (mainnet):** https://chef-bot-kappa.vercel.app
+- **Live (mainnet):** https://chef-bot.my.id (`www.` redirects here; https://chef-bot-kappa.vercel.app still works)
+- **AI API (Cloudflare Worker):** https://api.chef-bot.my.id
 - **Contract (BOT Chain mainnet, chain 677):** [`0x0d58c8dB2F9Cb482be94dCad9025A25f0940fA7D`](https://scan.botchain.ai/address/0x0d58c8dB2F9Cb482be94dCad9025A25f0940fA7D)
 - **Testnet contract (chain 968, for testing):** [`0x939878F4aA5564B91aFa1e8758A100F14AAbcB85`](https://scan.bohr.life/address/0x939878F4aA5564B91aFa1e8758A100F14AAbcB85)
 - **Status:** the full MVP plus v1.1 features runs on BOT Chain mainnet (chain 677).
@@ -194,7 +195,7 @@ You can also run the Worker on its own: `cd worker && npx wrangler dev`.
 |---|---|---|
 | `NEXT_PUBLIC_CHEFBOT_CONTRACT_ADDRESS` | ChefBOT contract | `0x0d58c8dB2F9Cb482be94dCad9025A25f0940fA7D` (mainnet). Empty → the UI shows "not deployed yet" notices |
 | `NEXT_PUBLIC_CHEFBOT_CHAIN_ID` | `968` testnet or `677` mainnet | `677` (also the default if unset). Must match the address's network |
-| `NEXT_PUBLIC_RECIPES_API_URL` | Worker base URL, no trailing slash | local `http://127.0.0.1:8787`; production `https://chefbot-recipes.bayuapriansyah2022.workers.dev`. Empty → curated recipes only |
+| `NEXT_PUBLIC_RECIPES_API_URL` | Worker base URL, no trailing slash | local `http://127.0.0.1:8787`; production `https://api.chef-bot.my.id`. Empty → curated recipes only |
 
 None of these are secrets. The Gemini key never goes into the website.
 
@@ -206,7 +207,8 @@ None of these are secrets. The Gemini key never goes into the website.
 | `GEMINI_MODEL` | `vars` | default `gemini-3.5-flash-lite` |
 | `GEMINI_THINKING_LEVEL` | `vars` (optional) | unset = model default |
 | `GEMINI_SCAN_MODEL` / `GEMINI_SCAN_THINKING_LEVEL` | `vars` (optional) | override for `/scan`; unset = same as recipes |
-| `CORS_ALLOWED_ORIGINS` | `vars` | exact origins, comma-separated. **Must include the live site URL** or the browser gets 403 |
+| `CORS_ALLOWED_ORIGINS` | `vars` | exact origins, comma-separated. **Must include the live site URL** (`https://chef-bot.my.id`, `https://www.chef-bot.my.id`, the vercel.app URL) or the browser gets 403 |
+| `routes` | top-level | `api.chef-bot.my.id` as a Workers Custom Domain (DNS + certificate created on deploy; needs the `chef-bot.my.id` zone on the same Cloudflare account) |
 | `RATE_LIMIT_PER_HOUR` | `vars` | default `20` per IP per hour (shared by `/recipes`, `/scan`, `POST /dishes`) |
 | `CHAIN_RPC_URL` | `vars` | RPC used to prove stamps before archiving: `https://rpc.botchain.ai` (mainnet; `https://rpc.bohr.life` for testnet) |
 | `CHEFBOT_CONTRACT_ADDRESS` | `vars` | the contract whose `Cooked` events count as proof. **Must be the same contract and network as the website** |
@@ -231,8 +233,8 @@ Errors use `{ "error": { "code", "message" } }` with 400 / 403 / 404 / 405 / 413
 Smoke test:
 
 ```bash
-curl -s https://chefbot-recipes.bayuapriansyah2022.workers.dev/health
-curl -s -X POST https://chefbot-recipes.bayuapriansyah2022.workers.dev/recipes \
+curl -s https://api.chef-bot.my.id/health
+curl -s -X POST https://api.chef-bot.my.id/recipes \
   -H "Content-Type: application/json" -H "Origin: http://localhost:3000" \
   -d '{"ingredients":["egg","rice"],"maxMinutes":20,"vegetarian":false}'
 ```
@@ -337,10 +339,6 @@ DESIGN.md               design system (parchment, ink, one alert red)
 
 ## Known limitations
 
-- **Testnet only** for now; mainnet needs a separate deploy and the owner's approval.
-- **Some Indonesian ISPs (e.g. XL) block `*.workers.dev`.**
-  - Browsers using secure DNS still reach the Worker.
-  - Others get the curated fallback.
-  - A custom domain for the Worker fixes this.
+- **Some Indonesian ISPs (e.g. XL) block `*.workers.dev`.** The site therefore calls the Worker at `api.chef-bot.my.id`; the `workers.dev` URL still works only as a fallback for direct testing.
 - **Free AI tier:** Gemini quota and the 20 requests/hour/IP limit can push users onto the curated fallback during heavy testing.
 - **Device-only data:** the shopping list and My Recipes don't sync between devices.

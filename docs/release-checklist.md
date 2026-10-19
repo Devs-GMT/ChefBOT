@@ -75,7 +75,10 @@ that address on 968). Testnet had 19 real stamps beforehand.
       `NEXT_PUBLIC_CHEFBOT_CHAIN_ID=677` (or unset = default 677),
       `NEXT_PUBLIC_RECIPES_API_URL=<worker url>` — then **redeploy**
       (NEXT_PUBLIC is build-time)
-- [ ] Worker `CORS_ALLOWED_ORIGINS` contains the production Vercel URL
+- [ ] Worker `CORS_ALLOWED_ORIGINS` contains the production site origins
+      (`https://chef-bot.my.id`, `https://www.chef-bot.my.id`, the vercel.app URL)
+- [ ] Site calls the Worker at `https://api.chef-bot.my.id`, not
+      `*.workers.dev` (DNS-blocked by some Indonesian ISPs, e.g. XL)
 - [ ] Worker `CHAIN_RPC_URL=https://rpc.botchain.ai` and
       `CHEFBOT_CONTRACT_ADDRESS=<mainnet>` (the archive proves each stamp
       against them; a testnet value rejects every mainnet stamp), then
