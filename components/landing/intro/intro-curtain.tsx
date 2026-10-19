@@ -53,7 +53,7 @@ const powerInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 /
  * the card, so the layer is dropped with no fade. Phones play 1.15× faster
  * with a softer glide, side photos kept on screen and flying out vertically,
  * the circle easing into the card's shape over the whole trip down, and no
- * counter. Click / key / wheel fast-forwards.
+ * counter. Click / key / wheel fast-forwards (touch does not, on phones).
  */
 export function IntroCurtain() {
   const overlay = useRef<HTMLDivElement>(null);
@@ -313,7 +313,11 @@ export function IntroCurtain() {
         anim.playbackRate = FAST_FORWARD;
       }
     };
-    window.addEventListener("pointerdown", fastForward, { once: true });
+    // Not on phones: any touch (e.g. trying to scroll) would play the morph
+    // 3.5× faster, so the circle appears to snap straight into the card.
+    if (!phone) {
+      window.addEventListener("pointerdown", fastForward, { once: true });
+    }
     window.addEventListener("keydown", fastForward, { once: true });
     window.addEventListener("wheel", fastForward, { once: true, passive: true });
 
