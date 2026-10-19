@@ -205,24 +205,26 @@ export function IntroCurtain() {
       if (phone) {
         // Phones (tall 4:5 card): one animation for position + shape, sampled
         // in steps so both always share the same progress. The clip box grows
-        // linearly while its "roundness" (radius / half the short side) eases
-        // linearly from a full circle to the card's 28px — circle → pill →
-        // rounded card, spread evenly over the whole trip down.
+        // with the trip and stays an ellipse (elliptical radii = half its
+        // size) on the way down; the corners only tighten to the card's 28px
+        // as it arrives (o^2.2) — circle → oval → card, never a square early.
         const dx = c.left - l.left;
         const dy = c.top - l.top;
-        const endRatio = 28 / (Math.min(l.width, l.height) / 2);
-        const steps = 12;
+        const steps = 16;
         const frames: Keyframe[] = [];
         for (let i = 0; i <= steps; i++) {
           const o = i / steps;
           const t = top * (1 - o);
           const s = side * (1 - o);
-          const ratio = 1 + (endRatio - 1) * o;
-          const r = (ratio * Math.min(l.width - 2 * s, l.height - 2 * t)) / 2;
+          const w = l.width - 2 * s;
+          const h = l.height - 2 * t;
+          const f = o ** 2.2;
+          const rx = w / 2 + (28 - w / 2) * f;
+          const ry = h / 2 + (28 - h / 2) * f;
           frames.push({
             offset: o,
             transform: `translate(${dx * o}px, ${dy * o}px)`,
-            clipPath: `inset(${t}px ${s}px ${t}px ${s}px round ${r}px)`,
+            clipPath: `inset(${t}px ${s}px ${t}px ${s}px round ${rx}px / ${ry}px)`,
           });
         }
         const morph = play(layer, frames, { duration: 1.6, easing: PHONE_MORPH });
