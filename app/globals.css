@@ -327,6 +327,10 @@ html.intro-active:not(.intro-exiting) body {
   .intro-overlay {
     --k: 0.87;
   }
+  /* Final shape for the phone iris morph (intro-curtain.tsx). */
+  .intro-photo {
+    border-radius: 28px;
+  }
 }
 
 .intro-photo {

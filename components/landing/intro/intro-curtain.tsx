@@ -50,7 +50,7 @@ const powerInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 /
  * that layer onto the card and releases the clip — the last frame matches
  * the card, so the layer is dropped with no fade. Phones play 1.15× faster
  * with a softer glide, side photos kept on screen and flying out vertically,
- * and no counter. Click / key / wheel fast-forwards.
+ * the circle irising open onto the card, and no counter. Click / key / wheel fast-forwards.
  */
 export function IntroCurtain() {
   const overlay = useRef<HTMLDivElement>(null);
@@ -198,14 +198,32 @@ export function IntroCurtain() {
       gsap.set(card, { autoAlpha: 0 });
       const heroPhoto = document.querySelector<HTMLElement>("[data-hero-photo]");
       const heroShift = heroPhoto ? Number(gsap.getProperty(heroPhoto, "yPercent")) || 0 : 0;
+      const travel = `translate(${c.left - l.left}px, ${c.top - l.top}px)`;
+      if (phone) {
+        // Phones (tall 4:5 card): the circle travels as a circle, then irises
+        // open until it covers the card; the layer's own 28px radius (CSS)
+        // gives the final shape — no rounded-square phase on the way.
+        play(layer, [{ transform: "none" }, { transform: travel }], { duration: 1.5, easing: glide });
+        const iris = play(
+          layer,
+          [
+            { clipPath: `circle(${d / 2}px at 50% 50%)` },
+            { clipPath: `circle(${Math.hypot(l.width, l.height) / 2 + 1}px at 50% 50%)` },
+          ],
+          { duration: 1.15, delay: 0.35, easing: glide },
+        );
+        play(inner, [{ transform: "none" }, { transform: `translateY(${heroShift}%)` }], {
+          duration: 1.5,
+          easing: glide,
+        });
+        iris.onfinish = finish;
+        return;
+      }
       const morph = play(
         layer,
         [
           { transform: "none", clipPath: `inset(${top}px ${side}px ${top}px ${side}px round ${d / 2}px)` },
-          {
-            transform: `translate(${c.left - l.left}px, ${c.top - l.top}px)`,
-            clipPath: "inset(0px 0px 0px 0px round 28px)",
-          },
+          { transform: travel, clipPath: "inset(0px 0px 0px 0px round 28px)" },
         ],
         { duration: 1.15, easing: glide },
       );
@@ -244,7 +262,7 @@ export function IntroCurtain() {
       );
       // Phones: the circle visibly starts toward the card before the green lifts.
       play(bg, [{ transform: "none" }, { transform: "translateY(-100%)" }], {
-        duration: 1.1,
+        duration: phone ? 1.3 : 1.1,
         delay: phone ? 0.3 : 0.2,
         easing: glide,
       });
