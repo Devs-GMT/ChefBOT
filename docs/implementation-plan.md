@@ -258,3 +258,14 @@ npm run build       # next build
   - **Checks:** prod build lists `/icon.svg`, `/apple-icon` and `/opengraph-image` as static routes. The `<head>` carries icon, apple-touch-icon, og:image and twitter:image. Nav CLS stays 0 to 0.002, with 0 errors.
   - **Gate:** typecheck, eslint, 388 Vitest, 17 Hardhat.
   - On Vercel the OG URL becomes absolute from `VERCEL_PROJECT_PRODUCTION_URL` (Next's metadata resolver), so no `metadataBase` is needed.
+- 2026-10-19: **Mainnet contract deployed by the owner (Remix): `0x0d58c8dB2F9Cb482be94dCad9025A25f0940fA7D`.**
+  - **Verified on-chain:** `rpc.botchain.ai` reports chain 677. The address holds 7,388 bytes of code, the same as the testnet build. `recipeKey("Fried Rice")` matches the repo anchor, `getDishes()` is empty, and there is no code at that address on 968. Testnet `0x9398…cB85` had 19 real stamps beforehand.
+  - **Repo switched to mainnet:**
+    - `worker/wrangler.jsonc` sets `CHAIN_RPC_URL=https://rpc.botchain.ai` and the mainnet `CHEFBOT_CONTRACT_ADDRESS`. Without this, the archive rejects every mainnet stamp; this step was missing from the checklist and is now added.
+    - `.env.example` uses the mainnet address and chain 677.
+    - README badges, status, env tables and the network table are updated.
+  - **Gate:** lint, typecheck (including contracts), 392 Vitest, Worker tsc and `wrangler deploy --dry-run` all pass.
+  - **Still open (owner):**
+    - `npx wrangler deploy`;
+    - Vercel `NEXT_PUBLIC_CHEFBOT_CHAIN_ID=677` (the live bundle still had the testnet address and `968` at check time), then redeploy;
+    - the first mainnet `cookIt` and an end-to-end check.

@@ -54,6 +54,12 @@ the exercise checklist below has **not** been run yet.
 
 ## 3. Mainnet (677) — deploy only after 1–2 pass
 
+Status 2026-10-19: contract **deployed and verified on-chain** at
+`0x0d58c8dB2F9Cb482be94dCad9025A25f0940fA7D` (`https://rpc.botchain.ai`
+reports chain 677; 7,388 bytes of code, the same size as the testnet build;
+`recipeKey("Fried Rice")` == repo anchor; `getDishes()` empty; no code at
+that address on 968). Testnet had 19 real stamps beforehand.
+
 - [ ] All suites green (§0) and testnet fully exercised (§1)
 - [ ] MetaMask on **chain 677** (`https://rpc.botchain.ai`), wallet funded
       with mainnet BOT for gas
@@ -70,6 +76,10 @@ the exercise checklist below has **not** been run yet.
       `NEXT_PUBLIC_RECIPES_API_URL=<worker url>` — then **redeploy**
       (NEXT_PUBLIC is build-time)
 - [ ] Worker `CORS_ALLOWED_ORIGINS` contains the production Vercel URL
+- [ ] Worker `CHAIN_RPC_URL=https://rpc.botchain.ai` and
+      `CHEFBOT_CONTRACT_ADDRESS=<mainnet>` (the archive proves each stamp
+      against them; a testnet value rejects every mainnet stamp), then
+      `npx wrangler deploy`
 - [ ] Fresh browser: connect wallet on 677 (auto-switch prompt works),
       full flow → Stamped ✓ → leaderboard/kitchen update
 - [ ] Footer explorer link opens the real contract on scan.botchain.ai

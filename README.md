@@ -4,8 +4,8 @@
 
 <p align="center">
   <a href="https://chef-bot-kappa.vercel.app"><img src="https://img.shields.io/badge/live-chef--bot--kappa.vercel.app-d50000?style=flat-square&logo=vercel&logoColor=white" alt="Live site"></a>
-  <a href="https://scan.bohr.life/address/0x939878F4aA5564B91aFa1e8758A100F14AAbcB85"><img src="https://img.shields.io/badge/BOT%20Chain-testnet%20968-110000?style=flat-square" alt="BOT Chain testnet 968"></a>
-  <img src="https://img.shields.io/badge/mainnet-not%20deployed-8d7d7d?style=flat-square" alt="Mainnet not deployed">
+  <a href="https://scan.botchain.ai/address/0x0d58c8dB2F9Cb482be94dCad9025A25f0940fA7D"><img src="https://img.shields.io/badge/BOT%20Chain-mainnet%20677-110000?style=flat-square" alt="BOT Chain mainnet 677"></a>
+  <a href="https://scan.bohr.life/address/0x939878F4aA5564B91aFa1e8758A100F14AAbcB85"><img src="https://img.shields.io/badge/testnet-968-8d7d7d?style=flat-square" alt="BOT Chain testnet 968"></a>
 </p>
 
 <p align="center">
@@ -27,9 +27,10 @@ realistic recipes from AI, and when you actually cook one, stamp it on
 **BOT Chain**. Every stamp counts toward a public *Most Cooked*
 leaderboard and your own on-chain kitchen.
 
-- **Live (testnet):** https://chef-bot-kappa.vercel.app
-- **Contract (BOT Chain testnet, chain 968):** [`0x939878F4aA5564B91aFa1e8758A100F14AAbcB85`](https://scan.bohr.life/address/0x939878F4aA5564B91aFa1e8758A100F14AAbcB85)
-- **Status:** the full MVP plus v1.1 features is live on testnet. Mainnet (chain 677) is not deployed yet.
+- **Live (mainnet):** https://chef-bot-kappa.vercel.app
+- **Contract (BOT Chain mainnet, chain 677):** [`0x0d58c8dB2F9Cb482be94dCad9025A25f0940fA7D`](https://scan.botchain.ai/address/0x0d58c8dB2F9Cb482be94dCad9025A25f0940fA7D)
+- **Testnet contract (chain 968, for testing):** [`0x939878F4aA5564B91aFa1e8758A100F14AAbcB85`](https://scan.bohr.life/address/0x939878F4aA5564B91aFa1e8758A100F14AAbcB85)
+- **Status:** the full MVP plus v1.1 features runs on BOT Chain mainnet (chain 677).
 
 **Docs:** [PRD](./ChefBOT_Development_Plan_EN.md) ·
 [v1.1 spec](./docs/spec-v1.1.md) ·
@@ -191,8 +192,8 @@ You can also run the Worker on its own: `cd worker && npx wrangler dev`.
 
 | Variable | Meaning | Current value |
 |---|---|---|
-| `NEXT_PUBLIC_CHEFBOT_CONTRACT_ADDRESS` | ChefBOT contract | `0x939878F4aA5564B91aFa1e8758A100F14AAbcB85` (testnet). Empty → the UI shows "not deployed yet" notices |
-| `NEXT_PUBLIC_CHEFBOT_CHAIN_ID` | `968` testnet or `677` mainnet | `968` (defaults to `677` if unset) |
+| `NEXT_PUBLIC_CHEFBOT_CONTRACT_ADDRESS` | ChefBOT contract | `0x0d58c8dB2F9Cb482be94dCad9025A25f0940fA7D` (mainnet). Empty → the UI shows "not deployed yet" notices |
+| `NEXT_PUBLIC_CHEFBOT_CHAIN_ID` | `968` testnet or `677` mainnet | `677` (also the default if unset). Must match the address's network |
 | `NEXT_PUBLIC_RECIPES_API_URL` | Worker base URL, no trailing slash | local `http://127.0.0.1:8787`; production `https://chefbot-recipes.bayuapriansyah2022.workers.dev`. Empty → curated recipes only |
 
 None of these are secrets. The Gemini key never goes into the website.
@@ -207,8 +208,8 @@ None of these are secrets. The Gemini key never goes into the website.
 | `GEMINI_SCAN_MODEL` / `GEMINI_SCAN_THINKING_LEVEL` | `vars` (optional) | override for `/scan`; unset = same as recipes |
 | `CORS_ALLOWED_ORIGINS` | `vars` | exact origins, comma-separated. **Must include the live site URL** or the browser gets 403 |
 | `RATE_LIMIT_PER_HOUR` | `vars` | default `20` per IP per hour (shared by `/recipes`, `/scan`, `POST /dishes`) |
-| `CHAIN_RPC_URL` | `vars` | RPC used to prove stamps before archiving (`https://rpc.bohr.life` on testnet) |
-| `CHEFBOT_CONTRACT_ADDRESS` | `vars` | the contract whose `Cooked` events count as proof |
+| `CHAIN_RPC_URL` | `vars` | RPC used to prove stamps before archiving: `https://rpc.botchain.ai` (mainnet; `https://rpc.bohr.life` for testnet) |
+| `CHEFBOT_CONTRACT_ADDRESS` | `vars` | the contract whose `Cooked` events count as proof. **Must be the same contract and network as the website** |
 
 Bindings: `RATE_LIMITER` (Durable Object, SQLite) and `DISHES` (KV, provisioned automatically on deploy).
 
@@ -252,9 +253,9 @@ A stamp proves a wallet *submitted* a record. It cannot prove the cooking physic
 | Network | Chain ID | RPC | Explorer | Address |
 |---|---|---|---|---|
 | BOT Chain testnet | 968 | `https://rpc.bohr.life` | `https://scan.bohr.life` | `0x939878F4aA5564B91aFa1e8758A100F14AAbcB85` |
-| BOT Chain mainnet | 677 | `https://rpc.botchain.ai` | `https://scan.botchain.ai` | not deployed yet |
+| BOT Chain mainnet | 677 | `https://rpc.botchain.ai` | `https://scan.botchain.ai` | `0x0d58c8dB2F9Cb482be94dCad9025A25f0940fA7D` |
 
-The contract is deployed by hand through Remix (compiler 0.8.34, optimizer 200 runs). See [docs/remix-deployment.md](./docs/remix-deployment.md). Mainnet follows [docs/release-checklist.md](./docs/release-checklist.md) and requires the project owner's explicit approval.
+The contract is deployed by hand through Remix (compiler 0.8.34, optimizer 200 runs). See [docs/remix-deployment.md](./docs/remix-deployment.md). The mainnet deployment (2026-10-19) followed [docs/release-checklist.md](./docs/release-checklist.md); on-chain it holds 7,388 bytes of code and `recipeKey("Fried Rice")` matches the repo anchor.
 
 ## Testing
 
